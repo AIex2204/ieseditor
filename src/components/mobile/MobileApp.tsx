@@ -3,12 +3,9 @@ import { useActiveDocEntry, useAppStore } from '../../state/store';
 import { ACCEPTED_EXTENSIONS, isAcceptedFileName, loadPhotometryFile } from '../../core/loadPhotometryFile';
 import { saveIesFile } from '../../core/ies/exportFile';
 import type { PhotometryDoc } from '../../core/ies/types';
-import { alignByCentroid } from '../../core/photometry/align';
-import { compressAfterSymmetrize, symmetrizeDoc } from '../../core/photometry/symmetrize';
-import { smoothDoc } from '../../core/photometry/smooth';
-import { cleanDoc, detectCutoff } from '../../core/photometry/clean';
 import { rotateDoc } from '../../core/photometry/rotate';
 import { currentFlux, scaleFluxTo } from '../../core/photometry/scaleFlux';
+import { applyAlign, applySymmetrize, applySmooth, applyClean, fixDoc } from '../../core/photometry/quickFix';
 import { MobilePolarChart } from './MobilePolarChart';
 import { useLoadDemo } from '../../hooks/useLoadDemo';
 import { useT } from '../../i18n/i18n';
@@ -16,31 +13,8 @@ import { LangSwitch } from '../common/LangSwitch';
 
 const MAX_FILE_SIZE = 30 * 1024 * 1024;
 
-// Инструменты с дефолтными параметрами — те же ядровые функции, что на
-// десктопе, но без настроек: применяются к текущему рабочему документу.
-// Поток при любой операции сохраняется (normalizeFlux у ядра).
-function applyAlign(doc: PhotometryDoc): PhotometryDoc {
-  return alignByCentroid(doc, { alignC0C180: true, alignC90C270: true }, 0.5, { normalizeFlux: true }).doc;
-}
-function applySymmetrize(doc: PhotometryDoc): PhotometryDoc {
-  const r = symmetrizeDoc(doc, 'average', { axial: false, c0c180: true, c90c270: true });
-  return compressAfterSymmetrize(r, { c0c180: true, c90c270: true });
-}
-function applySmooth(doc: PhotometryDoc): PhotometryDoc {
-  return smoothDoc(doc, { window: 11, degree: 2, smoothAzimuth: false, protectPeak: true });
-}
-function applyClean(doc: PhotometryDoc): PhotometryDoc {
-  const d = detectCutoff(doc);
-  return cleanDoc(doc, {
-    cutoffGamma: d.cutoffGamma,
-    dropRatio: d.dropRatio,
-    magnitudeCapFraction: d.magnitudeCapFraction,
-    smoothFalloff: false,
-    falloffWidthDeg: 3,
-    normalizeFlux: true,
-  });
-}
-
+// Инструменты с дефолтными параметрами берём из общего конвейера
+// (core/photometry/quickFix) — те же, что за кнопкой «Исправить IES».
 type ToolId = 'flux' | 'rotate' | 'align' | 'symmetrize' | 'smooth' | 'clean';
 
 const ONE_TAP: { id: ToolId; label: string; note: string; run: (d: PhotometryDoc) => PhotometryDoc }[] = [
@@ -64,6 +38,7 @@ export function MobileApp() {
   const [error, setError] = useState<string | null>(null);
   const [openTool, setOpenTool] = useState<ToolId | null>(null);
   const [done, setDone] = useState<ToolId | null>(null);
+  const [fixed, setFixed] = useState(false);
 
   const doc = entry?.workingDoc ?? null;
   const changed = entry !== null && entry.workingDoc !== entry.originalDoc;
@@ -94,6 +69,14 @@ export function MobileApp() {
     updateWorking(run(doc));
     setDone(id);
     setTimeout(() => setDone((cur) => (cur === id ? null : cur)), 1400);
+  }
+
+  function runFix() {
+    if (!doc) return;
+    updateWorking(fixDoc(doc));
+    setOpenTool(null);
+    setFixed(true);
+    setTimeout(() => setFixed(false), 1600);
   }
 
   return (
@@ -144,6 +127,13 @@ export function MobileApp() {
 
           {doc && <MobilePolarChart doc={doc} />}
 
+          <button className="btn btn-accent m-fix" onClick={runFix}>
+            {fixed ? t('Исправлено ✓') : t('Исправить IES')}
+          </button>
+          <p className="m-fix-note">
+            {t('Приводит файл в порядок автоматически. Ниже — те же шаги по отдельности, если нужна точная настройка.')}
+          </p>
+
           <div className="m-tools">
             {ONE_TAP.map((tItem) => (
               <button
@@ -160,19 +150,22 @@ export function MobileApp() {
             >
               {t('Поток')}
             </button>
-            <button
-              className={`m-tool ${openTool === 'rotate' ? 'active' : ''}`}
-              onClick={() => setOpenTool((cur) => (cur === 'rotate' ? null : 'rotate'))}
-            >
-              {t('Поворот')}
-            </button>
           </div>
 
           {openTool && ONE_TAP.some((t) => t.id === openTool) && (
             <ToolPanelOneTap tool={ONE_TAP.find((t) => t.id === openTool)!} done={done === openTool} onRun={runOneTap} />
           )}
           {openTool === 'flux' && doc && <FluxPanel doc={doc} onApply={updateWorking} />}
-          {openTool === 'rotate' && doc && <RotatePanel doc={doc} onApply={updateWorking} />}
+
+          <div className="m-rotate">
+            <button
+              className={`m-tool ${openTool === 'rotate' ? 'active' : ''}`}
+              onClick={() => setOpenTool((cur) => (cur === 'rotate' ? null : 'rotate'))}
+            >
+              {t('Поворот')}
+            </button>
+            {openTool === 'rotate' && doc && <RotatePanel doc={doc} onApply={updateWorking} />}
+          </div>
 
           {changed && (
             <button className="btn m-reset" onClick={() => discardChanges()}>

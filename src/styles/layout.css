@@ -1070,3 +1070,26 @@
     gap: 6px;
   }
 }
+
+/* Кнопка-герой «Исправить IES» — главный сценарий, одно нажатие */
+.tools-fix {
+  width: 100%;
+  padding: 12px;
+  font-size: 14px;
+  margin-top: 4px;
+}
+.tools-fix-note {
+  margin: 8px 2px 14px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+/* «Поворот» отделён снизу — при упрощённом сценарии почти не нужен */
+.tools-rotate {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border);
+}
+.tools-rotate > .btn {
+  width: 100%;
+}

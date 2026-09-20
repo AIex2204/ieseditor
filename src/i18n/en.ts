@@ -252,4 +252,8 @@ export const EN: Record<string, string> = {
   'Есть замечания': 'Some remarks',
   'Найдены проблемы': 'Problems found',
   'Справочник': 'Reference',
+  'Исправить IES': 'Fix IES',
+  'Исправлено ✓': 'Fixed ✓',
+  'Выравнивание, симметризация, сглаживание и чистка одним нажатием': 'Align, symmetrize, smooth and clean in one click',
+  'Приводит файл в порядок автоматически. Ниже — те же шаги по отдельности, если нужна точная настройка.': 'Puts the file in order automatically. The same steps are below individually, for fine control.',
 };

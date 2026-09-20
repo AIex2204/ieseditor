@@ -190,3 +190,25 @@
   align-items: center;
   gap: 10px;
 }
+
+.m-fix {
+  width: 100%;
+  margin-top: 16px;
+  padding: 15px;
+  font-size: 15px;
+}
+.m-fix-note {
+  margin: 8px 2px 4px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
+  text-align: center;
+}
+.m-rotate {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border);
+}
+.m-rotate .m-tool {
+  width: 100%;
+}
