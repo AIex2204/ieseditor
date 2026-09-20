@@ -5,8 +5,8 @@
 # нет ни Node.js, ни исходников, поверхность атаки минимальна.
 #
 # Использование:
-#   VITE_METRIKA_ID=12345678 ./deploy/deploy.sh    # с счётчиком Метрики
-#   ./deploy/deploy.sh                              # без аналитики
+#   ./deploy/deploy.sh                              # со счётчиком Метрики сайта
+#   VITE_METRIKA_ID= ./deploy/deploy.sh             # без аналитики
 #   ./deploy/deploy.sh --rollback                   # вернуть предыдущую версию
 #
 # Передача через tar по SSH, а не rsync: rsync нет в git-bash под Windows.
@@ -28,6 +28,14 @@ if [[ "${1:-}" == "--rollback" ]]; then
 fi
 
 cd "$ROOT"
+
+# Счётчик Метрики сайта ieseditor.ru. Не секрет — номер виден в коде
+# любой страницы с счётчиком. Задан здесь, а не в исходниках, чтобы
+# чужая сборка из репозитория не отправляла статистику нам, и чтобы выкладка
+# без переменной не стирала счётчик с сайта (разрыв в статистике — минус
+# при модерации в РСЯ). Выкладка без аналитики: VITE_METRIKA_ID= ./deploy/deploy.sh
+VITE_METRIKA_ID="${VITE_METRIKA_ID-112840348}"
+export VITE_METRIKA_ID
 
 echo "==> Сборка"
 if [[ -n "${VITE_METRIKA_ID:-}" ]]; then

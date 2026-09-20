@@ -38,7 +38,9 @@ export function initMetrika(counterId: string | undefined): void {
 
   const script = document.createElement('script');
   script.async = true;
-  script.src = SCRIPT_SRC;
+  // Номер в адресе скрипта — как в сниппете, который выдаёт Метрика: так
+  // счётчик отдаётся уже настроенным под конкретный идентификатор.
+  script.src = `${SCRIPT_SRC}?id=${encodeURIComponent(counterId)}`;
   document.head.appendChild(script);
 }
 
