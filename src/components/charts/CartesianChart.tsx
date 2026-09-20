@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useT } from '../../i18n/i18n';
 import type { PhotometryDoc } from '../../core/ies/types';
 import { interpolateCandela } from '../../core/photometry/interpolate';
 import { beamAngleAtPlanePeak, findImax, meridianPeak } from '../../core/photometry/metrics';
@@ -46,6 +47,7 @@ export function CartesianChart({
   compareDashed = true,
   showBeamAngle = true,
 }: CartesianChartProps) {
+  const t = useT();
   const padL = 50;
   const padB = 50;
   const padT = 26;
@@ -149,7 +151,7 @@ export function CartesianChart({
         )}
         {showBeamAngle && (
           <text x={padL + plotW} y={padT + plotH + 34} fontSize={12} fill="var(--curve-secondary)" textAnchor="end" fontWeight={700}>
-            {beam.fullAngle !== null ? `2γ½ = ${fmt(beam.fullAngle, 1)}°` : '2γ½ — н/д'}
+            {beam.fullAngle !== null ? `2γ½ = ${fmt(beam.fullAngle, 1)}°` : `2γ½ — ${t('н/д')}`}
           </text>
         )}
       </svg>

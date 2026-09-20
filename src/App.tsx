@@ -10,6 +10,7 @@ import { useIsMobile } from './hooks/useIsMobile';
 import { useLoadDemo } from './hooks/useLoadDemo';
 import { demoSeen } from './core/demo';
 import { useActiveDocEntry, useAppStore } from './state/store';
+import { useT } from './i18n/i18n';
 
 export function App() {
   const hydrateFromStorage = useAppStore((s) => s.hydrateFromStorage);
@@ -44,6 +45,7 @@ function DesktopShell() {
   const active = useActiveDocEntry();
   const viewMode = useAppStore((s) => s.viewMode);
   const loadDemo = useLoadDemo();
+  const t = useT();
 
   return (
     <div className="app-shell">
@@ -56,9 +58,9 @@ function DesktopShell() {
               <Workspace entry={active} />
             ) : (
               <div className="empty-state">
-                <p>Загрузите один или несколько .ies / .ldt файлов, чтобы увидеть кривую силы света.</p>
+                <p>{t('Загрузите один или несколько .ies / .ldt файлов, чтобы увидеть кривую силы света.')}</p>
                 <button className="btn btn-accent" onClick={() => void loadDemo()}>
-                  Открыть демо-файл
+                  {t('Открыть демо-файл')}
                 </button>
               </div>
             )}

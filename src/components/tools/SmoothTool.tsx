@@ -4,6 +4,7 @@ import { azimuthWindowPoints, smoothDoc } from '../../core/photometry/smooth';
 import { findImax } from '../../core/photometry/metrics';
 import { deriveStep } from '../../core/photometry/rotate';
 import { useLiveEdit } from './useLiveEdit';
+import { useT, useLang } from '../../i18n/i18n';
 
 function fmt(n: number, digits = 1): string {
   return n.toLocaleString('ru-RU', { minimumFractionDigits: digits, maximumFractionDigits: digits });
@@ -11,6 +12,8 @@ function fmt(n: number, digits = 1): string {
 
 export function SmoothTool({ sourceDoc }: { sourceDoc: PhotometryDoc }) {
   const { baseDoc, write } = useLiveEdit(sourceDoc);
+  const t = useT();
+  const lang = useLang();
 
   const [window, setWindow] = useState(11);
   const [degree, setDegree] = useState(2);
@@ -44,7 +47,7 @@ export function SmoothTool({ sourceDoc }: { sourceDoc: PhotometryDoc }) {
   return (
     <div className="tool-form">
       <label className="tool-field">
-        <span>Окно (точек)</span>
+        <span>{t('Окно (точек)')}</span>
         <input
           type="range"
           min={3}
@@ -57,7 +60,7 @@ export function SmoothTool({ sourceDoc }: { sourceDoc: PhotometryDoc }) {
       </label>
 
       <label className="tool-field">
-        <span>Степень полинома</span>
+        <span>{t('Степень полинома')}</span>
         <input type="range" min={1} max={4} step={1} value={degree} onChange={(e) => setDegree(Number(e.target.value))} />
         <span className="tool-number-static">{degree}</span>
       </label>
@@ -69,27 +72,39 @@ export function SmoothTool({ sourceDoc }: { sourceDoc: PhotometryDoc }) {
           disabled={!canSmoothAzimuth}
           onChange={(e) => setSmoothAzimuth(e.target.checked)}
         />
-        <span>Также сглаживать по азимуту C</span>
+        <span>{t('Также сглаживать по азимуту C')}</span>
       </label>
       {smoothAzimuth && canSmoothAzimuth && (
         <p className="tool-hint">
-          По азимуту окно подбирается под шаг сетки C: <b>{azWindow} точек (±{fmt(azSpan, 0)}°)</b> — столько же по углу,
-          сколько окно по γ. Иначе те же 11 точек при шаге 15° усреднили бы ±75° и стёрли азимутальную форму.
+          {lang === 'en' ? (
+            <>
+              Along azimuth the window matches the C grid step: <b>{azWindow} points (±{fmt(azSpan, 0)}°)</b> — the same
+              angular span as the γ window. Otherwise the same 11 points at a 15° step would average ±75° and erase the
+              azimuthal shape.
+            </>
+          ) : (
+            <>
+              По азимуту окно подбирается под шаг сетки C: <b>{azWindow} точек (±{fmt(azSpan, 0)}°)</b> — столько же по углу,
+              сколько окно по γ. Иначе те же 11 точек при шаге 15° усреднили бы ±75° и стёрли азимутальную форму.
+            </>
+          )}
         </p>
       )}
       {!canSmoothAzimuth && (
         <p className="tool-hint">
-          Плоскостей C в файле: {baseDoc.numHorizAngles} — сглаживать по азимуту нечего.
+          {lang === 'en'
+            ? `C planes in the file: ${baseDoc.numHorizAngles} — nothing to smooth along azimuth.`
+            : `Плоскостей C в файле: ${baseDoc.numHorizAngles} — сглаживать по азимуту нечего.`}
         </p>
       )}
       <label className="tool-checkbox">
         <input type="checkbox" checked={protectPeak} onChange={(e) => setProtectPeak(e.target.checked)} />
-        <span>Не трогать пик</span>
+        <span>{t('Не трогать пик')}</span>
       </label>
 
       {preview && (
         <p className="tool-hint">
-          Imax: {fmt(imaxBefore)} → {fmt(imaxAfter)} кд ({((imaxAfter / imaxBefore - 1) * 100).toFixed(1)}%). Поток сохранён точно.
+          Imax: {fmt(imaxBefore)} → {fmt(imaxAfter)} {lang === 'en' ? 'cd' : 'кд'} ({((imaxAfter / imaxBefore - 1) * 100).toFixed(1)}%). {lang === 'en' ? 'Flux preserved exactly.' : 'Поток сохранён точно.'}
         </p>
       )}
     </div>

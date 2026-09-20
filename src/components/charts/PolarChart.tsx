@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useT } from '../../i18n/i18n';
 import type { PhotometryDoc } from '../../core/ies/types';
 import { interpolateCandela } from '../../core/photometry/interpolate';
 import { beamAngleAtPlanePeak, findImax, meridianPeak } from '../../core/photometry/metrics';
@@ -62,6 +63,7 @@ export function PolarChart({
   compareDashed = true,
   showBeamAngle = true,
 }: PolarChartProps) {
+  const t = useT();
   const cx = size / 2;
   const cyTop = 40;
   const outerR = size / 2 - 56;
@@ -188,7 +190,7 @@ export function PolarChart({
         {/* подписи под графиком — фиксированное, всегда свободное место, наложений быть не может */}
         {showBeamAngle && (
           <text x={size / 2} y={size + 22} fontSize={13} fill="var(--curve-secondary)" textAnchor="middle" fontWeight={700}>
-            {beam.fullAngle !== null ? `2γ½ = ${fmt(beam.fullAngle, 1)}°` : '2γ½ — не достигается'}
+            {beam.fullAngle !== null ? `2γ½ = ${fmt(beam.fullAngle, 1)}°` : `2γ½ — ${t('не достигается')}`}
           </text>
         )}
         {maxDirection && (

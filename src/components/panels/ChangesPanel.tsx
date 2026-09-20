@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import type { PhotometryDoc } from '../../core/ies/types';
 import { diffDocs } from '../../core/audit/docDiff';
+import { useT } from '../../i18n/i18n';
 
 /**
  * Что именно отличается от исходного файла. Нужна не ради красоты: перед
@@ -8,12 +9,13 @@ import { diffDocs } from '../../core/audit/docDiff';
  * появились от простого захода в инструмент.
  */
 export function ChangesPanel({ originalDoc, workingDoc }: { originalDoc: PhotometryDoc; workingDoc: PhotometryDoc }) {
+  const t = useT();
   const items = useMemo(() => diffDocs(originalDoc, workingDoc), [originalDoc, workingDoc]);
   if (items.length === 0) return null;
 
   return (
     <div className="panel changes-panel">
-      <div className="panel-title">Изменения относительно исходного</div>
+      <div className="panel-title">{t('Изменения относительно исходного')}</div>
       <table>
         <tbody>
           {items.map((item) => (

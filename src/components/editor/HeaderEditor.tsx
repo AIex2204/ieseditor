@@ -1,4 +1,5 @@
 import type { IesFormat, Keyword, PhotometryDoc } from '../../core/ies/types';
+import { useT } from '../../i18n/i18n';
 import { STANDARD_KEYWORDS } from '../../core/ies/keywords';
 
 const FORMATS: IesFormat[] = ['LM-63-1986', 'LM-63-1991', 'LM-63-1995', 'LM-63-2002', 'LM-63-2019', 'LM-63-2025'];
@@ -15,12 +16,13 @@ export function HeaderEditor({ draft, onChange }: { draft: PhotometryDoc; onChan
     onChange({ ...draft, keywords: [...draft.keywords, { key: 'OTHER', value: '' }] });
   }
 
+  const t = useT();
   return (
     <div className="editor-section">
-      <h4>Формат и ключевые слова</h4>
+      <h4>{t('Формат и ключевые слова')}</h4>
 
       <label className="editor-field">
-        <span>Версия LM-63</span>
+        <span>{t('Версия LM-63')}</span>
         <select value={draft.format} onChange={(e) => onChange({ ...draft, format: e.target.value as IesFormat })}>
           {FORMATS.map((f) => (
             <option key={f} value={f}>
@@ -33,8 +35,8 @@ export function HeaderEditor({ draft, onChange }: { draft: PhotometryDoc; onChan
       <table className="editor-table">
         <thead>
           <tr>
-            <th>Ключ</th>
-            <th>Значение</th>
+            <th>{t('Ключ')}</th>
+            <th>{t('Значение')}</th>
             <th />
           </tr>
         </thead>
@@ -52,7 +54,7 @@ export function HeaderEditor({ draft, onChange }: { draft: PhotometryDoc; onChan
                 <input value={kw.value} onChange={(e) => setKeyword(i, { value: e.target.value })} />
               </td>
               <td>
-                <button className="editor-row-remove" onClick={() => removeKeyword(i)} title="Удалить">
+                <button className="editor-row-remove" onClick={() => removeKeyword(i)} title={t('Удалить')}>
                   ×
                 </button>
               </td>
@@ -66,7 +68,7 @@ export function HeaderEditor({ draft, onChange }: { draft: PhotometryDoc; onChan
         ))}
       </datalist>
       <button className="btn" onClick={addKeyword}>
-        + ключевое слово
+        {t('+ ключевое слово')}
       </button>
     </div>
   );

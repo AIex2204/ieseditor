@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { PhotometryDoc } from '../../core/ies/types';
 import { cleanDoc, detectCutoff, previewClean } from '../../core/photometry/clean';
 import { useLiveEdit } from './useLiveEdit';
+import { useT, useLang } from '../../i18n/i18n';
 
 function fmt(n: number, digits = 1): string {
   return n.toLocaleString('ru-RU', { minimumFractionDigits: digits, maximumFractionDigits: digits });
@@ -9,6 +10,8 @@ function fmt(n: number, digits = 1): string {
 
 export function CleanTool({ sourceDoc }: { sourceDoc: PhotometryDoc }) {
   const { baseDoc, write } = useLiveEdit(sourceDoc);
+  const t = useT();
+  const lang = useLang();
 
   const detection = useMemo(() => detectCutoff(baseDoc), [baseDoc]);
   const gMax = baseDoc.vertAngles[baseDoc.vertAngles.length - 1] ?? 180;
@@ -51,23 +54,23 @@ export function CleanTool({ sourceDoc }: { sourceDoc: PhotometryDoc }) {
   return (
     <div className="tool-form">
       <p className="tool-hint">
-        Автоопределение: мусор обнаружен начиная примерно с <b>{fmt(detection.cutoffGamma)}°</b>
+        {lang === 'en' ? 'Auto-detected: junk starts at about ' : 'Автоопределение: мусор обнаружен начиная примерно с '}<b>{fmt(detection.cutoffGamma)}°</b>
       </p>
 
       <label className="tool-field">
-        <span>Не трогать до угла, °</span>
+        <span>{t('Не трогать до угла, °')}</span>
         <input type="range" min={0} max={gMax} step={0.5} value={cutoffGamma} onChange={(e) => setCutoffGamma(Number(e.target.value))} />
         <span className="tool-number-static">{fmt(cutoffGamma)}</span>
       </label>
 
       <label className="tool-field">
-        <span>Порог "внезапности" обрыва</span>
+        <span>{t('Порог "внезапности" обрыва')}</span>
         <input type="range" min={0.05} max={0.8} step={0.05} value={dropRatio} onChange={(e) => setDropRatio(Number(e.target.value))} />
         <span className="tool-number-static">{fmt(dropRatio * 100, 0)}%</span>
       </label>
 
       <label className="tool-field">
-        <span>Потолок по модулю, % от Imax</span>
+        <span>{t('Потолок по модулю, % от Imax')}</span>
         <input
           type="range"
           min={0.5}
@@ -81,14 +84,16 @@ export function CleanTool({ sourceDoc }: { sourceDoc: PhotometryDoc }) {
 
       <label className="tool-checkbox">
         <input type="checkbox" checked={smoothFalloff} onChange={(e) => setSmoothFalloff(e.target.checked)} />
-        <span>Плавный спад вместо жёсткого нуля</span>
+        <span>{t('Плавный спад вместо жёсткого нуля')}</span>
       </label>
 
       {report && (
         <p className="tool-hint">
-          Будет обнулено/уменьшено ячеек: <b>{report.affectedCount}</b>
+          {lang === 'en' ? 'Cells to zero/reduce' : 'Будет обнулено/уменьшено ячеек'}: <b>{report.affectedCount}</b>
           <br />
-          Потеря потока до компенсации: {fmt(report.lostLumens, 3)} лм ({fmt(report.lostFraction * 100, 4)}%) — поток сохраняется, нормируется к исходному.
+          {lang === 'en'
+            ? `Flux lost before compensation: ${fmt(report.lostLumens, 3)} lm (${fmt(report.lostFraction * 100, 4)}%) — flux is preserved, normalized to the original.`
+            : `Потеря потока до компенсации: ${fmt(report.lostLumens, 3)} лм (${fmt(report.lostFraction * 100, 4)}%) — поток сохраняется, нормируется к исходному.`}
         </p>
       )}
     </div>

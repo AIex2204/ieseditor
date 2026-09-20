@@ -11,6 +11,8 @@ import { rotateDoc } from '../../core/photometry/rotate';
 import { currentFlux, scaleFluxTo } from '../../core/photometry/scaleFlux';
 import { MobilePolarChart } from './MobilePolarChart';
 import { useLoadDemo } from '../../hooks/useLoadDemo';
+import { useT } from '../../i18n/i18n';
+import { LangSwitch } from '../common/LangSwitch';
 
 const MAX_FILE_SIZE = 30 * 1024 * 1024;
 
@@ -56,6 +58,7 @@ export function MobileApp() {
   const updateWorking = useAppStore((s) => s.updateWorking);
   const discardChanges = useAppStore((s) => s.discardChanges);
   const loadDemo = useLoadDemo();
+  const t = useT();
 
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -68,11 +71,11 @@ export function MobileApp() {
   async function loadOne(file: File) {
     setError(null);
     if (!isAcceptedFileName(file.name)) {
-      setError('Это не .ies и не .ldt файл');
+      setError(t('Это не .ies и не .ldt файл'));
       return;
     }
     if (file.size > MAX_FILE_SIZE) {
-      setError('Файл слишком большой');
+      setError(t('Файл слишком большой'));
       return;
     }
     try {
@@ -96,12 +99,15 @@ export function MobileApp() {
   return (
     <div className="m-app">
       <header className="m-header">
-        <span className="m-title">Редактор IES файлов</span>
+        <span className="m-title">{t('Редактор IES файлов')}</span>
+        <div className="m-header-right">
+          <LangSwitch />
         {entry && (
           <button className="btn btn-accent m-dl" onClick={() => saveIesFile(entry.workingDoc, entry.name)}>
-            Выгрузить IES
+            {t('Выгрузить IES')}
           </button>
         )}
+        </div>
       </header>
 
       <input
@@ -119,11 +125,11 @@ export function MobileApp() {
       {!entry ? (
         <div className="m-empty">
           <button className="btn btn-accent m-load" onClick={() => inputRef.current?.click()}>
-            Загрузить .ies / .ldt
+            {t('Загрузить .ies / .ldt')}
           </button>
-          <p className="m-empty-note">Файл обрабатывается прямо на телефоне и никуда не отправляется.</p>
+          <p className="m-empty-note">{t('Файл обрабатывается прямо на телефоне и никуда не отправляется.')}</p>
           <button className="m-demo-link" onClick={() => void loadDemo()}>
-            Открыть демо-файл
+            {t('Открыть демо-файл')}
           </button>
           {error && <p className="m-error">{error}</p>}
         </div>
@@ -132,33 +138,33 @@ export function MobileApp() {
           <div className="m-filename" title={entry.name}>
             {entry.name}
             <button className="m-replace" onClick={() => inputRef.current?.click()}>
-              заменить
+              {t('заменить')}
             </button>
           </div>
 
           {doc && <MobilePolarChart doc={doc} />}
 
           <div className="m-tools">
-            {ONE_TAP.map((t) => (
+            {ONE_TAP.map((tItem) => (
               <button
-                key={t.id}
-                className={`m-tool ${openTool === t.id ? 'active' : ''}`}
-                onClick={() => setOpenTool((cur) => (cur === t.id ? null : t.id))}
+                key={tItem.id}
+                className={`m-tool ${openTool === tItem.id ? 'active' : ''}`}
+                onClick={() => setOpenTool((cur) => (cur === tItem.id ? null : tItem.id))}
               >
-                {t.label}
+                {t(tItem.label)}
               </button>
             ))}
             <button
               className={`m-tool ${openTool === 'flux' ? 'active' : ''}`}
               onClick={() => setOpenTool((cur) => (cur === 'flux' ? null : 'flux'))}
             >
-              Поток
+              {t('Поток')}
             </button>
             <button
               className={`m-tool ${openTool === 'rotate' ? 'active' : ''}`}
               onClick={() => setOpenTool((cur) => (cur === 'rotate' ? null : 'rotate'))}
             >
-              Поворот
+              {t('Поворот')}
             </button>
           </div>
 
@@ -170,7 +176,7 @@ export function MobileApp() {
 
           {changed && (
             <button className="btn m-reset" onClick={() => discardChanges()}>
-              Отменить изменения
+              {t('Отменить изменения')}
             </button>
           )}
           {error && <p className="m-error">{error}</p>}
@@ -178,7 +184,7 @@ export function MobileApp() {
       )}
 
       <footer className="m-footer">
-        <a href="/politika-obrabotki-dannyh.html">Политика данных</a> · <a href="/polzovatelskoe-soglashenie.html">Соглашение</a>
+        <a href="/politika-obrabotki-dannyh.html">{t('Политика данных')}</a> · <a href="/polzovatelskoe-soglashenie.html">{t('Соглашение')}</a>
       </footer>
     </div>
   );
@@ -193,23 +199,25 @@ function ToolPanelOneTap({
   done: boolean;
   onRun: (id: ToolId, run: (d: PhotometryDoc) => PhotometryDoc) => void;
 }) {
+  const t = useT();
   return (
     <div className="m-panel">
-      <p className="m-panel-note">{tool.note}</p>
+      <p className="m-panel-note">{t(tool.note)}</p>
       <button className="btn btn-accent m-apply" onClick={() => onRun(tool.id, tool.run)}>
-        {done ? 'Применено ✓' : 'Применить'}
+        {done ? t('Применено ✓') : t('Применить')}
       </button>
     </div>
   );
 }
 
 function FluxPanel({ doc, onApply }: { doc: PhotometryDoc; onApply: (d: PhotometryDoc) => void }) {
+  const t = useT();
   const [value, setValue] = useState(() => Math.round(currentFlux(doc, 'computed')));
   const [done, setDone] = useState(false);
   return (
     <div className="m-panel">
       <label className="m-field">
-        <span>Световой поток, лм</span>
+        <span>{t('Световой поток, лм')}</span>
         <input
           type="number"
           inputMode="decimal"
@@ -228,13 +236,14 @@ function FluxPanel({ doc, onApply }: { doc: PhotometryDoc; onApply: (d: Photomet
           setDone(true);
         }}
       >
-        {done ? 'Применено ✓' : 'Применить'}
+        {done ? t('Применено ✓') : t('Применить')}
       </button>
     </div>
   );
 }
 
 function RotatePanel({ doc, onApply }: { doc: PhotometryDoc; onApply: (d: PhotometryDoc) => void }) {
+  const t = useT();
   const [spin, setSpin] = useState(0);
   const [tilt1, setTilt1] = useState(0);
   const [tilt2, setTilt2] = useState(0);
@@ -242,7 +251,7 @@ function RotatePanel({ doc, onApply }: { doc: PhotometryDoc; onApply: (d: Photom
   const identity = spin === 0 && tilt1 === 0 && tilt2 === 0;
   const field = (label: string, v: number, set: (n: number) => void) => (
     <label className="m-field">
-      <span>{label}</span>
+      <span>{t(label)}</span>
       <input
         type="number"
         inputMode="decimal"
@@ -267,7 +276,7 @@ function RotatePanel({ doc, onApply }: { doc: PhotometryDoc; onApply: (d: Photom
           setDone(true);
         }}
       >
-        {done ? 'Применено ✓' : 'Применить'}
+        {done ? t('Применено ✓') : t('Применить')}
       </button>
     </div>
   );

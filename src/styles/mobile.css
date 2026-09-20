@@ -184,3 +184,9 @@
   cursor: pointer;
   text-decoration: underline;
 }
+
+.m-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}

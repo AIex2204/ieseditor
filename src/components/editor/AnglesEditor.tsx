@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useT, useLang } from '../../i18n/i18n';
 import type { PhotometryDoc } from '../../core/ies/types';
 import { resampleAngles } from '../../core/photometry/resample';
 
@@ -29,29 +30,32 @@ export function AnglesEditor({ draft, onChange }: { draft: PhotometryDoc; onChan
     onChange(resampleAngles(draft, parsedVert, parsedHoriz));
   }
 
+  const t = useT();
+  const lang = useLang();
   return (
     <div className="editor-section">
-      <h4>Угловые сетки γ и C</h4>
+      <h4>{t('Угловые сетки γ и C')}</h4>
       <p className="tool-hint">
-        Изменение сетки пересчитывает силу света билинейной интерполяцией по текущим данным — числа не
-        подставляются заново, а вычисляются заново на новых углах.
+        {lang === 'en'
+          ? 'Changing the grid resamples the intensity with bilinear interpolation over the current data — values are recomputed at the new angles, not just copied over.'
+          : 'Изменение сетки пересчитывает силу света билинейной интерполяцией по текущим данным — числа не подставляются заново, а вычисляются заново на новых углах.'}
       </p>
 
       <label className="editor-field">
-        <span>γ (надир → зенит), °, через пробел</span>
+        <span>{t('γ (надир → зенит), °, через пробел')}</span>
         <textarea rows={4} value={vertText} onChange={(e) => setVertText(e.target.value)} />
       </label>
 
       <label className="editor-field">
-        <span>C (азимут), °, через пробел</span>
+        <span>{t('C (азимут), °, через пробел')}</span>
         <textarea rows={4} value={horizText} onChange={(e) => setHorizText(e.target.value)} />
       </label>
 
-      {!valid && <p className="tool-hint tool-hint-error">Нужно минимум 2 угла γ и 1 угол C</p>}
+      {!valid && <p className="tool-hint tool-hint-error">{t('Нужно минимум 2 угла γ и 1 угол C')}</p>}
 
       <div className="tool-actions">
         <button className="btn btn-accent" disabled={!valid || !changed} onClick={apply}>
-          Пересчитать КСС на новую сетку
+          {t('Пересчитать КСС на новую сетку')}
         </button>
         <button
           className="btn"
@@ -60,7 +64,7 @@ export function AnglesEditor({ draft, onChange }: { draft: PhotometryDoc; onChan
             setHorizText(draft.horizAngles.join(' '));
           }}
         >
-          Сбросить текст
+          {t('Сбросить текст')}
         </button>
       </div>
     </div>

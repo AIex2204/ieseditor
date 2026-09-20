@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { METRIKA_ID } from '../../analytics/metrika';
+import { useT } from '../../i18n/i18n';
 
 const STORAGE_KEY = 'ies-cookie-ack';
 
@@ -18,6 +19,7 @@ function alreadyAcked(): boolean {
  * запоминается в localStorage, работу приложения полоса не блокирует.
  */
 export function CookieNotice() {
+  const t = useT();
   const [hidden, setHidden] = useState(() => !METRIKA_ID || alreadyAcked());
 
   if (hidden) return null;
@@ -32,16 +34,16 @@ export function CookieNotice() {
   }
 
   return (
-    <div className="cookie-notice" role="region" aria-label="Уведомление о файлах cookie">
+    <div className="cookie-notice" role="region" aria-label={t('Уведомление о файлах cookie')}>
       <span className="cookie-notice-text">
-        Сайт использует cookie только для обезличенной статистики посещений (Яндекс.Метрика).{' '}
+        {t('Сайт использует cookie только для обезличенной статистики посещений (Яндекс.Метрика).')}{' '}
         <a href="/politika-obrabotki-dannyh.html" target="_blank" rel="noopener noreferrer">
-          Политика обработки данных
+          {t('Политика обработки данных')}
         </a>
         .
       </span>
       <button type="button" className="btn cookie-notice-btn" onClick={accept}>
-        Понятно
+        {t('Понятно')}
       </button>
     </div>
   );

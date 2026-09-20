@@ -3,6 +3,8 @@ import { activeDoc, useActiveDocEntry, useAppStore, type ViewMode } from '../../
 import { saveIesFile } from '../../core/ies/exportFile';
 import { saveArchive } from '../../core/ies/exportArchive';
 import { renderChartsForExport } from '../charts/renderForExport';
+import { useT } from '../../i18n/i18n';
+import { LangSwitch } from '../common/LangSwitch';
 
 const NAV: { id: ViewMode; label: string }[] = [
   { id: 'files', label: 'Файлы' },
@@ -35,6 +37,7 @@ export function Header() {
   const setViewMode = useAppStore((s) => s.setViewMode);
   const saveAsNewFile = useAppStore((s) => s.saveAsNewFile);
   const [busy, setBusy] = useState(false);
+  const t = useT();
 
   const hasPendingChanges = entry !== null && activeDoc(entry) !== entry.originalDoc;
 
@@ -58,7 +61,7 @@ export function Header() {
 
   return (
     <header className="app-header">
-      <span className="app-title">Редактор IES файлов</span>
+      <span className="app-title">{t('Редактор IES файлов')}</span>
       <nav className="app-nav">
         {NAV.map((item) => (
           <span
@@ -66,37 +69,38 @@ export function Header() {
             className={`app-nav-item ${viewMode === item.id ? 'active' : ''}`}
             onClick={() => setViewMode(item.id)}
           >
-            {item.label}
+            {t(item.label)}
           </span>
         ))}
       </nav>
       <div className="app-header-spacer" />
+      <LangSwitch />
       {viewMode === 'files' && entry && (
         <div className="app-header-actions">
           <button
             className="btn btn-accent btn-export"
             disabled={!hasPendingChanges}
-            title="Зафиксировать правки как новую версию файла «…(edited vN).ies». Исходный файл вернётся к первоначальному виду — их можно сравнить на вкладке «Сравнение»."
+            title={t('Зафиксировать правки как новую версию файла «…(edited vN).ies». Исходный файл вернётся к первоначальному виду — их можно сравнить на вкладке «Сравнение».')}
             onClick={() => saveAsNewFile()}
           >
-            Сохранить
+            {t('Сохранить')}
           </button>
           <button
             className="btn btn-accent btn-export"
-            title="Скачать только фотометрический файл .ies, без отчётов и диаграмм"
+            title={t('Скачать только фотометрический файл .ies, без отчётов и диаграмм')}
             onClick={() => saveIesFile(activeDoc(entry), entry.name)}
           >
             {DOWNLOAD_ICON}
-            Выгрузить IES
+            {t('Выгрузить IES')}
           </button>
           <button
             className="btn btn-accent btn-export"
             disabled={busy}
-            title="Скачать архив: файл .ies, отчёт о проверке, отчёт об обработке, показатели для даташита, диаграммы и исходный файл"
+            title={t('Скачать архив: файл .ies, отчёт о проверке, отчёт об обработке, показатели для даташита, диаграммы и исходный файл')}
             onClick={() => void handleExportArchive()}
           >
             {DOWNLOAD_ICON}
-            {busy ? 'Готовим архив…' : 'Выгрузить все'}
+            {busy ? t('Готовим архив…') : t('Выгрузить все')}
           </button>
         </div>
       )}

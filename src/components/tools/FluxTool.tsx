@@ -3,6 +3,7 @@ import type { PhotometryDoc } from '../../core/ies/types';
 import { currentFlux, scaleFluxTo, type FluxReference } from '../../core/photometry/scaleFlux';
 import { DecimalInput } from '../common/DecimalInput';
 import { useLiveEdit } from './useLiveEdit';
+import { useT, useLang } from '../../i18n/i18n';
 
 function fmt(n: number, digits = 1): string {
   return n.toLocaleString('ru-RU', { minimumFractionDigits: digits, maximumFractionDigits: digits });
@@ -23,6 +24,8 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
  */
 export function FluxTool({ sourceDoc }: { sourceDoc: PhotometryDoc }) {
   const { baseDoc, write } = useLiveEdit(sourceDoc);
+  const t = useT();
+  const lang = useLang();
 
   const [reference, setReference] = useState<FluxReference>('computed');
   const computedFlux = useMemo(() => currentFlux(baseDoc, 'computed'), [baseDoc]);
@@ -82,43 +85,43 @@ export function FluxTool({ sourceDoc }: { sourceDoc: PhotometryDoc }) {
   return (
     <div className="tool-form">
       <p className="tool-hint">
-        Расчётный поток: <b>{fmt(computedFlux)} лм</b>
+        {lang === 'en' ? 'Computed flux' : 'Расчётный поток'}: <b>{fmt(computedFlux)} {lang === 'en' ? 'lm' : 'лм'}</b>
         {declaredFlux !== null && (
           <>
             {' '}
-            · заявленный: <b>{fmt(declaredFlux)} лм</b>
+            · {lang === 'en' ? 'declared' : 'заявленный'}: <b>{fmt(declaredFlux)} {lang === 'en' ? 'lm' : 'лм'}</b>
           </>
         )}
       </p>
 
       <label className="tool-field">
-        <span>Опорное значение</span>
+        <span>{t('Опорное значение')}</span>
         <select value={reference} onChange={(e) => changeReference(e.target.value as FluxReference)}>
-          <option value="computed">Расчётное по КСС</option>
+          <option value="computed">{t('Расчётное по КСС')}</option>
           <option value="declared" disabled={declaredFlux === null}>
-            Заявленное в файле
+            {t('Заявленное в файле')}
           </option>
         </select>
       </label>
 
       <label className="tool-field">
-        <span>Поток, лм</span>
+        <span>{t('Поток, лм')}</span>
         <DecimalInput value={flux} onChange={changeFlux} />
       </label>
 
       <label className="tool-field">
-        <span>Мощность, Вт</span>
+        <span>{t('Мощность, Вт')}</span>
         <DecimalInput value={watts} onChange={changeWatts} />
       </label>
 
       <label className="tool-field">
-        <span>Светоотдача, лм/Вт</span>
+        <span>{t('Светоотдача, лм/Вт')}</span>
         <DecimalInput value={efficacy} onChange={changeEfficacy} disabled={watts <= 0} />
       </label>
 
-      {!valid && <p className="tool-hint tool-hint-error">Поток должен быть положительным</p>}
+      {!valid && <p className="tool-hint tool-hint-error">{t('Поток должен быть положительным')}</p>}
       {watts <= 0 && (
-        <p className="tool-hint">Мощность в файле не задана — укажите её, чтобы считать светоотдачу.</p>
+        <p className="tool-hint">{t('Мощность в файле не задана — укажите её, чтобы считать светоотдачу.')}</p>
       )}
     </div>
   );

@@ -2,9 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import type { PhotometryDoc } from '../../core/ies/types';
 import { compressAfterSymmetrize, symmetrizeDoc } from '../../core/photometry/symmetrize';
 import { useLiveEdit } from './useLiveEdit';
+import { useT } from '../../i18n/i18n';
 
 export function SymmetrizeTool({ sourceDoc }: { sourceDoc: PhotometryDoc }) {
   const { baseDoc, write } = useLiveEdit(sourceDoc);
+  const t = useT();
 
   const [axial, setAxial] = useState(false);
   const [c0c180, setC0c180] = useState(true);
@@ -45,25 +47,25 @@ export function SymmetrizeTool({ sourceDoc }: { sourceDoc: PhotometryDoc }) {
             }
           }}
         />
-        <span>Осевая (полная, схлопнуть в одну плоскость)</span>
+        <span>{t('Осевая (полная, схлопнуть в одну плоскость)')}</span>
       </label>
       <label className="tool-checkbox">
         <input type="checkbox" checked={c0c180} disabled={axial} onChange={(e) => setC0c180(e.target.checked)} />
-        <span>По плоскости C0–C180</span>
+        <span>{t('По плоскости C0–C180')}</span>
       </label>
       <label className="tool-checkbox">
         <input type="checkbox" checked={c90c270} disabled={axial} onChange={(e) => setC90c270(e.target.checked)} />
-        <span>По плоскости C90–C270</span>
+        <span>{t('По плоскости C90–C270')}</span>
       </label>
 
       {!axial && (
         <label className="tool-checkbox">
           <input type="checkbox" checked={compress} disabled={!c0c180} onChange={(e) => setCompress(e.target.checked)} />
-          <span>Сжать таблицу C после симметризации</span>
+          <span>{t('Сжать таблицу C после симметризации')}</span>
         </label>
       )}
 
-      {!hasSelection && <p className="tool-hint tool-hint-error">Выберите хотя бы одну ось</p>}
+      {!hasSelection && <p className="tool-hint tool-hint-error">{t('Выберите хотя бы одну ось')}</p>}
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useT } from '../../i18n/i18n';
 import type { PhotometryDoc, TiltMode } from '../../core/ies/types';
 
 function parseList(text: string): number[] {
@@ -44,6 +45,7 @@ function NumberListInput({ values, onChange }: { values: number[]; onChange: (ne
 }
 
 export function TiltEditor({ draft, onChange }: { draft: PhotometryDoc; onChange: (next: PhotometryDoc) => void }) {
+  const t = useT();
   const tilt = draft.tilt;
 
   function setMode(mode: TiltMode) {
@@ -64,17 +66,17 @@ export function TiltEditor({ draft, onChange }: { draft: PhotometryDoc; onChange
     <div className="editor-section">
       <h4>TILT</h4>
       <label className="editor-field">
-        <span>Режим</span>
+        <span>{t('Режим')}</span>
         <select value={tilt.mode} onChange={(e) => setMode(e.target.value as TiltMode)}>
           <option value="NONE">NONE</option>
-          <option value="INCLUDE">INCLUDE (пары угол/множитель в этом файле)</option>
-          <option value="FILE">Внешний файл</option>
+          <option value="INCLUDE">{t('INCLUDE (пары угол/множитель в этом файле)')}</option>
+          <option value="FILE">{t('Внешний файл')}</option>
         </select>
       </label>
 
       {tilt.mode === 'FILE' && (
         <label className="editor-field">
-          <span>Имя файла</span>
+          <span>{t('Имя файла')}</span>
           <input value={tilt.fileName ?? ''} onChange={(e) => onChange({ ...draft, tilt: { ...tilt, fileName: e.target.value } })} />
         </label>
       )}
@@ -82,22 +84,22 @@ export function TiltEditor({ draft, onChange }: { draft: PhotometryDoc; onChange
       {tilt.mode === 'INCLUDE' && (
         <>
           <label className="editor-field">
-            <span>Геометрия лампы-светильника</span>
+            <span>{t('Геометрия лампы-светильника')}</span>
             <select
               value={tilt.lampToLuminaireGeometry ?? 1}
               onChange={(e) => onChange({ ...draft, tilt: { ...tilt, lampToLuminaireGeometry: Number(e.target.value) as 1 | 2 | 3 } })}
             >
-              <option value={1}>1 — вертикальная</option>
-              <option value={2}>2 — горизонтальная симметричная</option>
-              <option value={3}>3 — горизонтальная несимметричная</option>
+              <option value={1}>{t('1 — вертикальная')}</option>
+              <option value={2}>{t('2 — горизонтальная симметричная')}</option>
+              <option value={3}>{t('3 — горизонтальная несимметричная')}</option>
             </select>
           </label>
           <label className="editor-field">
-            <span>Углы, °</span>
+            <span>{t('Углы, °')}</span>
             <NumberListInput values={tilt.angles ?? []} onChange={(v) => setPairs(v, 'angles')} />
           </label>
           <label className="editor-field">
-            <span>Множители</span>
+            <span>{t('Множители')}</span>
             <NumberListInput values={tilt.factors ?? []} onChange={(v) => setPairs(v, 'factors')} />
           </label>
         </>

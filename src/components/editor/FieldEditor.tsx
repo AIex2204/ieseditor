@@ -7,6 +7,7 @@ import { NumericFieldsEditor } from './NumericFieldsEditor';
 import { AnglesEditor } from './AnglesEditor';
 import { CandelaGrid } from './CandelaGrid';
 import { ShapeEditor } from './ShapeEditor';
+import { useT } from '../../i18n/i18n';
 
 type Section = 'header' | 'tilt' | 'numeric' | 'shape' | 'angles' | 'grid';
 
@@ -22,6 +23,7 @@ const SECTIONS: { id: Section; label: string }[] = [
 export function FieldEditor({ entryId, doc }: { entryId: string; doc: PhotometryDoc }) {
   const updateWorking = useAppStore((s) => s.updateWorking);
   const [section, setSection] = useState<Section>('header');
+  const t = useT();
 
   // Правки идут прямо в рабочий документ — как и в инструментах обработки.
   // Отдельного черновика с кнопкой «Применить» нет: зафиксировать состояние
@@ -31,7 +33,7 @@ export function FieldEditor({ entryId, doc }: { entryId: string; doc: Photometry
       <div className="editor-tabs">
         {SECTIONS.map((s) => (
           <button key={s.id} className={`btn ${section === s.id ? 'active' : ''}`} onClick={() => setSection(s.id)}>
-            {s.label}
+            {t(s.label)}
           </button>
         ))}
       </div>

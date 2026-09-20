@@ -4,6 +4,7 @@ import { rotateDoc } from '../../core/photometry/rotate';
 import { computeFlux } from '../../core/photometry/flux';
 import { DecimalInput } from '../common/DecimalInput';
 import { useLiveEdit } from './useLiveEdit';
+import { useT, useLang } from '../../i18n/i18n';
 
 function fmt(n: number, digits = 2): string {
   return n.toLocaleString('ru-RU', { minimumFractionDigits: digits, maximumFractionDigits: digits });
@@ -11,6 +12,8 @@ function fmt(n: number, digits = 2): string {
 
 export function RotateTool({ sourceDoc }: { sourceDoc: PhotometryDoc }) {
   const { baseDoc, write } = useLiveEdit(sourceDoc);
+  const t = useT();
+  const lang = useLang();
 
   const [spin, setSpin] = useState(0);
   const [tiltC0C180, setTiltC0C180] = useState(0);
@@ -40,27 +43,27 @@ export function RotateTool({ sourceDoc }: { sourceDoc: PhotometryDoc }) {
   return (
     <div className="tool-form">
       <label className="tool-field">
-        <span>Спин по азимуту C, °</span>
+        <span>{t('Спин по азимуту C, °')}</span>
         <input type="range" min={-180} max={180} step={0.1} value={spin} onChange={(e) => setSpin(Number(e.target.value))} />
         <DecimalInput className="tool-number" value={spin} onChange={setSpin} />
       </label>
 
       <label className="tool-field">
-        <span>Наклон в плоскости C0–C180, °</span>
+        <span>{t('Наклон в плоскости C0–C180, °')}</span>
         <input type="range" min={-90} max={90} step={0.1} value={tiltC0C180} onChange={(e) => setTiltC0C180(Number(e.target.value))} />
         <DecimalInput className="tool-number" value={tiltC0C180} onChange={setTiltC0C180} />
       </label>
 
       <label className="tool-field">
-        <span>Наклон в плоскости C90–C270, °</span>
+        <span>{t('Наклон в плоскости C90–C270, °')}</span>
         <input type="range" min={-90} max={90} step={0.1} value={tiltC90C270} onChange={(e) => setTiltC90C270(Number(e.target.value))} />
         <DecimalInput className="tool-number" value={tiltC90C270} onChange={setTiltC90C270} />
       </label>
 
       {!isIdentity && preview && (
         <p className="tool-hint">
-          Поток: {fmt(fluxAfter, 1)} лм ({fluxDeltaPct >= 0 ? '+' : ''}
-          {fmt(fluxDeltaPct, 2)}%) — сохраняется, нормируется к исходному.
+          {lang === 'en' ? 'Flux' : 'Поток'}: {fmt(fluxAfter, 1)} {lang === 'en' ? 'lm' : 'лм'} ({fluxDeltaPct >= 0 ? '+' : ''}
+          {fmt(fluxDeltaPct, 2)}%) — {lang === 'en' ? 'preserved, normalized to the original.' : 'сохраняется, нормируется к исходному.'}
         </p>
       )}
 
@@ -68,14 +71,14 @@ export function RotateTool({ sourceDoc }: { sourceDoc: PhotometryDoc }) {
         <button
           className="btn"
           disabled={isIdentity}
-          title="Вернуть углы к нулю — КСС вернётся к состоянию на момент открытия инструмента"
+          title={t('Вернуть углы к нулю — КСС вернётся к состоянию на момент открытия инструмента')}
           onClick={() => {
             setSpin(0);
             setTiltC0C180(0);
             setTiltC90C270(0);
           }}
         >
-          Сбросить углы
+          {lang === 'en' ? 'Reset angles' : 'Сбросить углы'}
         </button>
       </div>
     </div>

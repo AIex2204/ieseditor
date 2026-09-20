@@ -10,6 +10,7 @@ import { ChangesPanel } from '../panels/ChangesPanel';
 import { ToolsPanel } from '../tools/ToolsPanel';
 import { FieldEditor } from '../editor/FieldEditor';
 import { isGeometryReady } from '../../core/ies/typeConvert';
+import { useT, useLang } from '../../i18n/i18n';
 
 type ViewTab = 'polar' | 'cartesian' | 'editor';
 
@@ -17,6 +18,8 @@ export function Workspace({ entry }: { entry: DocEntry }) {
   const [tab, setTab] = useState<ViewTab>('polar');
   const [scaleBasis, setScaleBasis] = useState<ScaleBasis>('shared');
   const previewBaseline = useAppStore((s) => s.previewBaseline);
+  const t = useT();
+  const lang = useLang();
 
   const doc = activeDoc(entry); // всегда рабочий документ — инструменты пишут в него живьём
   const compareDoc = previewBaseline ?? undefined; // "было" на момент открытия текущего инструмента
@@ -34,9 +37,19 @@ export function Workspace({ entry }: { entry: DocEntry }) {
       <div className="workspace-main">
         {!geometryReady && (
           <div className="type-banner">
-            <b>Фотометрия {doc.photometricType === 2 ? 'Type B' : 'Type A'}.</b> Вся расчётная математика редактора
-            построена на Type C, поэтому графики и показатели ниже для этого файла недостоверны, а инструменты
-            обработки отключены. Просмотр таблицы, правка полей и сохранение работают как обычно.
+            {lang === 'en' ? (
+              <>
+                <b>{doc.photometricType === 2 ? 'Type B' : 'Type A'} photometry.</b> All of the editor's math is built on
+                Type C, so the charts and metrics below are unreliable for this file and the processing tools are
+                disabled. Viewing the table, editing fields and saving still work as usual.
+              </>
+            ) : (
+              <>
+                <b>Фотометрия {doc.photometricType === 2 ? 'Type B' : 'Type A'}.</b> Вся расчётная математика редактора
+                построена на Type C, поэтому графики и показатели ниже для этого файла недостоверны, а инструменты
+                обработки отключены. Просмотр таблицы, правка полей и сохранение работают как обычно.
+              </>
+            )}
           </div>
         )}
 
@@ -50,7 +63,7 @@ export function Workspace({ entry }: { entry: DocEntry }) {
               ] as [ViewTab, string][]
             ).map(([id, label]) => (
               <button key={id} className={`btn ${tab === id ? 'active' : ''}`} onClick={() => setTab(id)}>
-                {label}
+                {t(label)}
               </button>
             ))}
           </div>
@@ -61,11 +74,11 @@ export function Workspace({ entry }: { entry: DocEntry }) {
               onClick={() => setScaleBasis(scaleBasis === 'shared' ? 'ownPlaneMax' : 'shared')}
               title={
                 scaleBasis === 'shared'
-                  ? 'Обе плоскости в общей шкале (Imax всей КСС) — можно сравнивать величину между плоскостями'
-                  : 'Каждая плоскость нормирована к своему собственному максимуму — форма луча всегда доходит до края'
+                  ? t('Обе плоскости в общей шкале (Imax всей КСС) — можно сравнивать величину между плоскостями')
+                  : t('Каждая плоскость нормирована к своему собственному максимуму — форма луча всегда доходит до края')
               }
             >
-              Шкала: {scaleBasis === 'shared' ? 'абсолютная' : 'относительная'}
+              {t('Шкала')}: {scaleBasis === 'shared' ? t('абсолютная') : t('относительная')}
             </button>
           )}
         </div>

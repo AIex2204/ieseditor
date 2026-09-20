@@ -971,3 +971,29 @@
 .about-docs a {
   color: var(--accent);
 }
+
+/* Переключатель языка в шапке */
+.lang-switch {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  margin-right: 4px;
+}
+.lang-switch button {
+  border: none;
+  background: var(--bg);
+  color: var(--muted);
+  font: inherit;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 5px 9px;
+  cursor: pointer;
+}
+.lang-switch button.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.about-docs-note {
+  color: var(--muted);
+  font-size: 12px;
+}

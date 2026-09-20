@@ -6,6 +6,7 @@ import { findImax } from '../../core/photometry/metrics';
 import { computeFlux } from '../../core/photometry/flux';
 import { PolarChart } from '../charts/PolarChart';
 import { ACCEPTED_EXTENSIONS, loadPhotometryFile } from '../../core/loadPhotometryFile';
+import { useT } from '../../i18n/i18n';
 
 function fmt(n: number, digits = 1): string {
   return n.toLocaleString('ru-RU', { minimumFractionDigits: digits, maximumFractionDigits: digits });
@@ -19,6 +20,7 @@ export function CompareView() {
   const [absolute, setAbsolute] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const t = useT();
 
   const entryA = documents.find((d) => d.id === idA) ?? documents[0] ?? null;
   const entryB = documents.find((d) => d.id === idB) ?? documents[1] ?? null;
@@ -48,7 +50,7 @@ export function CompareView() {
   const addFileControl = (
     <div className="compare-add-file">
       <button className="btn" onClick={() => inputRef.current?.click()}>
-        + Добавить файл
+        {t('+ Добавить файл')}
       </button>
       <input
         ref={inputRef}
@@ -68,7 +70,7 @@ export function CompareView() {
   if (documents.length < 2) {
     return (
       <div className="compare-empty">
-        <p>Для сравнения нужно как минимум два файла.</p>
+        <p>{t('Для сравнения нужно как минимум два файла.')}</p>
         {addFileControl}
       </div>
     );
@@ -87,7 +89,7 @@ export function CompareView() {
     <div className="compare-view">
       <div className="compare-toolbar">
         <label className="compare-select">
-          <span>Файл A</span>
+          <span>{t('Файл A')}</span>
           <select value={entryA?.id ?? ''} onChange={(e) => setIdA(e.target.value)}>
             {documents.map((d) => (
               <option key={d.id} value={d.id}>
@@ -97,7 +99,7 @@ export function CompareView() {
           </select>
         </label>
         <label className="compare-select">
-          <span>Файл B</span>
+          <span>{t('Файл B')}</span>
           <select value={entryB?.id ?? ''} onChange={(e) => setIdB(e.target.value)}>
             {documents.map((d) => (
               <option key={d.id} value={d.id}>
@@ -113,11 +115,11 @@ export function CompareView() {
           onClick={() => setAbsolute((v) => !v)}
           title={
             absolute
-              ? 'Обе кривые в реальных канделах — если светильники сильно различаются по яркости, слабая кривая может быть почти не видна'
-              : 'Каждая кривая нормирована к своему максимуму — форма луча сравнима, даже если яркость различается в разы'
+              ? t('Обе кривые в реальных канделах — если светильники сильно различаются по яркости, слабая кривая может быть почти не видна')
+              : t('Каждая кривая нормирована к своему максимуму — форма луча сравнима, даже если яркость различается в разы')
           }
         >
-          Шкала: {absolute ? 'абсолютная (кд)' : 'относительная (%)'}
+          {t('Шкала')}: {absolute ? t('абсолютная (кд)') : t('относительная (%)')}
         </button>
       </div>
 
@@ -153,7 +155,7 @@ export function CompareView() {
           <table className="compare-table">
             <thead>
               <tr>
-                <th>Показатель</th>
+                <th>{t('Показатель')}</th>
                 <th>A</th>
                 <th>B</th>
                 <th>Δ (B − A)</th>
@@ -162,7 +164,7 @@ export function CompareView() {
             <tbody>
               {rows.map(([label, a, b]) => (
                 <tr key={label}>
-                  <td>{label}</td>
+                  <td>{label.indexOf(', C') >= 0 ? t(label.slice(0, label.indexOf(', C'))) + label.slice(label.indexOf(', C')) : t(label)}</td>
                   <td>{fmt(a)}</td>
                   <td>{fmt(b)}</td>
                   <td className={b - a > 0 ? 'diff-pos' : b - a < 0 ? 'diff-neg' : ''}>

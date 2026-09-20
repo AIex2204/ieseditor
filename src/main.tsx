@@ -15,6 +15,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import { initMetrika, METRIKA_ID } from './analytics/metrika';
+import { applyDocumentLang, useI18n } from './i18n/i18n';
 import './styles/tokens.css';
 import './styles/layout.css';
 import './styles/mobile.css';
@@ -24,6 +25,9 @@ if (!container) throw new Error('#root не найден');
 
 // без VITE_METRIKA_ID ничего не подключается — сборка остаётся автономной
 initMetrika(METRIKA_ID);
+
+// синхронизируем <html lang>, заголовок и meta с выбранным языком
+applyDocumentLang(useI18n.getState().lang);
 
 createRoot(container).render(
   <StrictMode>

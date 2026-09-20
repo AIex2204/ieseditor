@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { activeDoc, MAX_DOCUMENTS, useActiveDocEntry, useAppStore } from '../../state/store';
 import { ACCEPTED_EXTENSIONS, isAcceptedFileName, loadPhotometryFile } from '../../core/loadPhotometryFile';
 import { AuditPanel } from '../panels/AuditPanel';
+import { useT } from '../../i18n/i18n';
 
 const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15 МБ — с запасом даже для файлов с сотнями тысяч значений
 
@@ -27,20 +28,21 @@ export function Sidebar() {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const t = useT();
 
   async function handleFiles(files: FileList | File[]) {
     setError(null);
     for (const file of Array.from(files)) {
       if (useAppStore.getState().documents.length >= MAX_DOCUMENTS) {
-        setError(`Достигнут лимит в ${MAX_DOCUMENTS} файлов — удалите один из списка, чтобы загрузить новый.`);
+        setError(t('Достигнут лимит в N файлов — удалите один из списка, чтобы загрузить новый.').replace('N', String(MAX_DOCUMENTS)));
         break;
       }
       if (!isAcceptedFileName(file.name)) {
-        setError(`${file.name}: это не .ies и не .ldt файл`);
+        setError(`${file.name}: ${t('это не .ies и не .ldt файл')}`);
         continue;
       }
       if (file.size > MAX_FILE_SIZE) {
-        setError(`${file.name}: файл слишком большой (${(file.size / 1024 / 1024).toFixed(1)} МБ)`);
+        setError(`${file.name}: ${t('файл слишком большой')} (${(file.size / 1024 / 1024).toFixed(1)} ${t('МБ')})`);
         continue;
       }
       try {
@@ -60,7 +62,7 @@ export function Sidebar() {
     <div className="sidebar">
       <div className="panel file-panel">
         <div className="panel-title">
-          Файлы ({documents.length}/{MAX_DOCUMENTS})
+          {t('Файлы')} ({documents.length}/{MAX_DOCUMENTS})
         </div>
         <div
           className={`dropzone ${isDragOver ? 'dropzone-over' : ''}`}
@@ -76,7 +78,7 @@ export function Sidebar() {
           }}
           onClick={() => inputRef.current?.click()}
         >
-          Перетащите .ies/.ldt или нажмите, чтобы выбрать
+          {t('Перетащите .ies/.ldt или нажмите, чтобы выбрать')}
           <input
             ref={inputRef}
             type="file"
@@ -103,7 +105,7 @@ export function Sidebar() {
               </span>
               <button
                 className="file-remove"
-                title="Убрать из списка"
+                title={t('Убрать из списка')}
                 onClick={(e) => {
                   e.stopPropagation();
                   removeDocument(d.id);
@@ -114,7 +116,7 @@ export function Sidebar() {
             </li>
             );
           })}
-          {documents.length === 0 && <li className="file-list-empty">Файлы не загружены</li>}
+          {documents.length === 0 && <li className="file-list-empty">{t('Файлы не загружены')}</li>}
         </ul>
       </div>
 

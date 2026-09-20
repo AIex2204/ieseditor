@@ -1,4 +1,5 @@
 // Форма светового отверстия (п. 7 доп. правки): LM-63 кодирует не только
+import { useT, useLang } from '../../i18n/i18n';
 // размеры, но и форму знаком Width/Length/Height — отрицательное значение
 // означает круглое/эллиптическое сечение по этой оси, модуль — диаметр.
 // См. общепринятую конвенцию (AGi32/DesignLights и практику DIALux/Relux):
@@ -64,6 +65,8 @@ export function ShapeEditor({ draft, onChange }: { draft: PhotometryDoc; onChang
   const [type, setType] = useState<ShapeType>(() => detectShape(draft.width, draft.length, draft.height));
   const [diameter, setDiameter] = useState(() => Math.abs(draft.width) || Math.abs(draft.height) || 0.1);
   const [lengthDim, setLengthDim] = useState(() => Math.abs(draft.length) || Math.abs(draft.width) || 0.1);
+  const t = useT();
+  const lang = useLang();
   const [widthDim, setWidthDim] = useState(() => Math.abs(draft.width) || Math.abs(draft.length) || 0.1);
   const [heightDim, setHeightDim] = useState(() => Math.abs(draft.height) || 0);
 
@@ -78,19 +81,19 @@ export function ShapeEditor({ draft, onChange }: { draft: PhotometryDoc; onChang
 
   return (
     <div className="editor-section">
-      <h4>Форма светового отверстия</h4>
+      <h4>{t('Форма светового отверстия')}</h4>
       <p className="tool-hint">
-        Width/Length/Height в LM-63 кодируют не только размеры, но и форму: отрицательное значение по оси означает
-        круглое/эллиптическое сечение (по модулю — диаметр). На саму КСС не влияет, используется расчётными пакетами
-        для самозатенения в ближней зоне.
+        {lang === 'en'
+          ? 'In LM-63, Width/Length/Height encode not just sizes but the shape too: a negative value along an axis means a round/elliptical section (its absolute value is the diameter). It does not affect the distribution itself; calculation packages use it for near-field self-shadowing.'
+          : 'Width/Length/Height в LM-63 кодируют не только размеры, но и форму: отрицательное значение по оси означает круглое/эллиптическое сечение (по модулю — диаметр). На саму КСС не влияет, используется расчётными пакетами для самозатенения в ближней зоне.'}
       </p>
 
       <label className="editor-field">
-        <span>Форма</span>
+        <span>{t('Форма')}</span>
         <select value={type} onChange={(e) => changeType(e.target.value as ShapeType)}>
-          {(Object.keys(SHAPE_LABELS) as ShapeType[]).map((t) => (
-            <option key={t} value={t}>
-              {SHAPE_LABELS[t]}
+          {(Object.keys(SHAPE_LABELS) as ShapeType[]).map((st) => (
+            <option key={st} value={st}>
+              {t(SHAPE_LABELS[st])}
             </option>
           ))}
         </select>
@@ -98,15 +101,15 @@ export function ShapeEditor({ draft, onChange }: { draft: PhotometryDoc; onChang
 
       {type === 'custom' && (
         <p className="tool-hint tool-hint-error">
-          Текущие значения (Width {draft.width}, Length {draft.length}, Height {draft.height}) не укладываются ни в
-          одну стандартную схему. Выберите форму выше, чтобы задать размеры заново, либо правьте сырые числа на
-          вкладке «Числовые поля».
+          {lang === 'en'
+            ? `Current values (Width ${draft.width}, Length ${draft.length}, Height ${draft.height}) don't fit any standard scheme. Pick a shape above to set the sizes anew, or edit the raw numbers on the Numeric fields tab.`
+            : `Текущие значения (Width ${draft.width}, Length ${draft.length}, Height ${draft.height}) не укладываются ни в одну стандартную схему. Выберите форму выше, чтобы задать размеры заново, либо правьте сырые числа на вкладке «Числовые поля».`}
         </p>
       )}
 
       {(type === 'disc' || type === 'cylinder' || type === 'sphere') && (
         <label className="editor-field">
-          <span>Диаметр, м</span>
+          <span>{t('Диаметр, м')}</span>
           <DecimalInput
             value={diameter}
             onChange={(n) => {
@@ -120,7 +123,7 @@ export function ShapeEditor({ draft, onChange }: { draft: PhotometryDoc; onChang
       {(type === 'rect' || type === 'ellipseLength' || type === 'ellipseWidth') && (
         <>
           <label className="editor-field">
-            <span>Длина (плоскость C0–C180), м</span>
+            <span>{t('Длина (плоскость C0–C180), м')}</span>
             <DecimalInput
               value={lengthDim}
               onChange={(n) => {
@@ -130,7 +133,7 @@ export function ShapeEditor({ draft, onChange }: { draft: PhotometryDoc; onChang
             />
           </label>
           <label className="editor-field">
-            <span>Ширина (плоскость C90–C270), м</span>
+            <span>{t('Ширина (плоскость C90–C270), м')}</span>
             <DecimalInput
               value={widthDim}
               onChange={(n) => {
@@ -144,7 +147,7 @@ export function ShapeEditor({ draft, onChange }: { draft: PhotometryDoc; onChang
 
       {(type === 'rect' || type === 'cylinder' || type === 'ellipseLength' || type === 'ellipseWidth') && (
         <label className="editor-field">
-          <span>Высота, м</span>
+          <span>{t('Высота, м')}</span>
           <DecimalInput
             value={heightDim}
             onChange={(n) => {
@@ -155,10 +158,10 @@ export function ShapeEditor({ draft, onChange }: { draft: PhotometryDoc; onChang
         </label>
       )}
 
-      {type === 'point' && <p className="tool-hint">Источник считается точечным: все три размера равны нулю.</p>}
+      {type === 'point' && <p className="tool-hint">{t('Источник считается точечным: все три размера равны нулю.')}</p>}
 
       <p className="tool-hint">
-        Итоговые значения в файле: Width {draft.width}, Length {draft.length}, Height {draft.height}
+        {lang === 'en' ? 'Final values in the file' : 'Итоговые значения в файле'}: Width {draft.width}, Length {draft.length}, Height {draft.height}
       </p>
     </div>
   );

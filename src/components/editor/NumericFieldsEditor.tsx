@@ -1,4 +1,5 @@
 import type { PhotometryDoc } from '../../core/ies/types';
+import { useT, useLang } from '../../i18n/i18n';
 import { DecimalInput } from '../common/DecimalInput';
 
 type NumKey =
@@ -31,30 +32,33 @@ export function NumericFieldsEditor({ draft, onChange }: { draft: PhotometryDoc;
     onChange({ ...draft, [key]: n });
   }
 
+  const t = useT();
+  const lang = useLang();
   return (
     <div className="editor-section">
-      <h4>Числовые поля</h4>
+      <h4>{t('Числовые поля')}</h4>
       <div className="editor-grid">
         {FIELDS.map((f) => (
           <label className="editor-field" key={f.key}>
-            <span>{f.label}</span>
+            <span>{t(f.label)}</span>
             <DecimalInput value={draft[f.key]} onChange={(n) => setNum(f.key, n)} />
           </label>
         ))}
 
         <label className="editor-field">
-          <span>Тип фотометрии</span>
+          <span>{t('Тип фотометрии')}</span>
           <select
             value={draft.photometricType}
             onChange={(e) => onChange({ ...draft, photometricType: Number(e.target.value) as 1 | 2 | 3 })}
           >
-            <option value={1}>1 — Type C</option>
-            <option value={2}>2 — Type B</option>
-            <option value={3}>3 — Type A</option>
+            <option value={1}>{t('1 — Type C')}</option>
+            <option value={2}>{t('2 — Type B')}</option>
+            <option value={3}>{t('3 — Type A')}</option>
           </select>
           <span className="editor-note">
-            Меняет только отметку в файле, не пересчитывая углы. Ставьте другой тип лишь если знаете, что в файле
-            указан неверный — иначе таблица начнёт трактоваться неправильно.
+            {lang === 'en'
+              ? 'Only changes the marker in the file, without recomputing angles. Set a different type only if you know the file lists it wrong — otherwise the table will be interpreted incorrectly.'
+              : 'Меняет только отметку в файле, не пересчитывая углы. Ставьте другой тип лишь если знаете, что в файле указан неверный — иначе таблица начнёт трактоваться неправильно.'}
           </span>
         </label>
       </div>

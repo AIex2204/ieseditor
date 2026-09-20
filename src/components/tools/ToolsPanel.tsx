@@ -7,6 +7,7 @@ import { AlignTool } from './AlignTool';
 import { SymmetrizeTool } from './SymmetrizeTool';
 import { SmoothTool } from './SmoothTool';
 import { CleanTool } from './CleanTool';
+import { useT, useLang } from '../../i18n/i18n';
 
 type ToolId = 'none' | 'flux' | 'rotate' | 'align' | 'symmetrize' | 'smooth' | 'clean';
 
@@ -35,6 +36,8 @@ export interface ToolsPanelProps {
 export function ToolsPanel({ docId, sourceDoc, hasPendingChanges, geometryReady }: ToolsPanelProps) {
   const [active, setActive] = useState<ToolId>('none');
   const discardChanges = useAppStore((s) => s.discardChanges);
+  const t = useT();
+  const lang = useLang();
 
   // сбрасываем открытый инструмент при переключении на другой файл (правки
   // внутри одного файла копятся и не должны закрывать панель) и когда
@@ -51,28 +54,29 @@ export function ToolsPanel({ docId, sourceDoc, hasPendingChanges, geometryReady 
   return (
     <div className="panel tools-panel">
       <div className="tools-panel-header">
-        <div className="panel-title">Инструменты</div>
-        <button className="btn tools-discard" disabled={!hasPendingChanges} onClick={handleDiscard} title="Вернуть файл к исходному состоянию, отменив все правки">
-          Отменить изменения
+        <div className="panel-title">{t('Инструменты')}</div>
+        <button className="btn tools-discard" disabled={!hasPendingChanges} onClick={handleDiscard} title={t('Вернуть файл к исходному состоянию, отменив все правки')}>
+          {t('Отменить изменения')}
         </button>
       </div>
       <div className="tools-grid">
-        {TOOLS.map((t) => (
+        {TOOLS.map((tItem) => (
           <button
-            key={t.id}
-            className={`btn ${active === t.id ? 'active' : ''}`}
+            key={tItem.id}
+            className={`btn ${active === tItem.id ? 'active' : ''}`}
             disabled={!geometryReady}
-            title={geometryReady ? undefined : 'Недоступно для файлов Type A/B — обработка рассчитана на Type C'}
-            onClick={() => setActive(active === t.id ? 'none' : t.id)}
+            title={geometryReady ? undefined : t('Недоступно для файлов Type A/B — обработка рассчитана на Type C')}
+            onClick={() => setActive(active === tItem.id ? 'none' : tItem.id)}
           >
-            {t.label}
+            {t(tItem.label)}
           </button>
         ))}
       </div>
       {!geometryReady && (
         <p className="tool-hint tool-hint-blocked">
-          Инструменты отключены: файл записан как Type {sourceDoc.photometricType === 2 ? 'B' : 'A'}, а обработка
-          опирается на модель Type C. Чтобы обработать такой файл, его нужно пересчитать в Type C.
+          {lang === 'en'
+            ? `Tools are disabled: the file is stored as Type ${sourceDoc.photometricType === 2 ? 'B' : 'A'}, while processing relies on the Type C model. To process such a file it must first be converted to Type C.`
+            : `Инструменты отключены: файл записан как Type ${sourceDoc.photometricType === 2 ? 'B' : 'A'}, а обработка опирается на модель Type C. Чтобы обработать такой файл, его нужно пересчитать в Type C.`}
         </p>
       )}
 

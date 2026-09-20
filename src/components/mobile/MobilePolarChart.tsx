@@ -3,6 +3,7 @@ import type { PhotometryDoc } from '../../core/ies/types';
 import { interpolateCandela } from '../../core/photometry/interpolate';
 import { findImax } from '../../core/photometry/metrics';
 import { projectGridPoint, projectMeridianPoint } from '../charts/polarGeometry';
+import { useT } from '../../i18n/i18n';
 
 const GRID_RINGS = [0.25, 0.5, 0.75, 1.0];
 const ANGLE_TICKS = [30, 60, 90, 120, 150];
@@ -16,6 +17,7 @@ const TRANSVERSE = 'var(--accent)'; // C90–C270 — поперечная
  * Надир (γ=0) внизу — как светит светильник.
  */
 export function MobilePolarChart({ doc, size = 320 }: { doc: PhotometryDoc; size?: number }) {
+  const t = useT();
   const cx = size / 2;
   const outerR = size / 2 - 26;
   const cy = size / 2;
@@ -64,10 +66,10 @@ export function MobilePolarChart({ doc, size = 320 }: { doc: PhotometryDoc; size
       </svg>
       <div className="m-chart-legend">
         <span>
-          <i style={{ background: '#1a1a1a' }} /> C0–C180 (продольная)
+          <i style={{ background: '#1a1a1a' }} /> {t('C0–C180 (продольная)')}
         </span>
         <span>
-          <i style={{ background: 'var(--accent)' }} /> C90–C270 (поперечная)
+          <i style={{ background: 'var(--accent)' }} /> {t('C90–C270 (поперечная)')}
         </span>
       </div>
     </div>

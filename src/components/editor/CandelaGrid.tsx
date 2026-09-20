@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
+import { useT, useLang } from '../../i18n/i18n';
 import { VariableSizeGrid, type GridChildComponentProps } from 'react-window';
 import type { PhotometryDoc } from '../../core/ies/types';
 import { DecimalInput } from '../common/DecimalInput';
@@ -61,6 +62,8 @@ function Cell({ columnIndex, rowIndex, style, data }: GridChildComponentProps<Ce
 }
 
 export function CandelaGrid({ draft, onChange }: { draft: PhotometryDoc; onChange: (next: PhotometryDoc) => void }) {
+  const t = useT();
+  const lang = useLang();
   const nv = draft.numVertAngles;
   const nh = draft.numHorizAngles;
   /** Только для подсветки — какие ячейки правились в этом сеансе. */
@@ -89,10 +92,11 @@ export function CandelaGrid({ draft, onChange }: { draft: PhotometryDoc; onChang
 
   return (
     <div className="editor-section">
-      <h4>Таблица силы света (кд)</h4>
+      <h4>{t('Таблица силы света (кд)')}</h4>
       <p className="tool-hint">
-        {nh} плоскостей × {nv} углов = {(nh * nv).toLocaleString('ru-RU')} значений. Правка ячейки сразу попадает в
-        файл; отменить всё можно кнопкой «Отменить изменения».
+        {lang === 'en'
+          ? `${nh} planes × ${nv} angles = ${(nh * nv).toLocaleString('en-US')} values. A cell edit goes straight into the file; “Discard changes” reverts everything.`
+          : `${nh} плоскостей × ${nv} углов = ${(nh * nv).toLocaleString('ru-RU')} значений. Правка ячейки сразу попадает в файл; отменить всё можно кнопкой «Отменить изменения».`}
       </p>
       <VariableSizeGrid
         columnCount={nh + 1}
