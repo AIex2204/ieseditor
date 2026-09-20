@@ -33,6 +33,8 @@ export type UnitsType = 1 | 2; // 1=футы, 2=метры
 export interface WarningItem {
   code: string;
   message: string;
+  /** Английский вариант сообщения; если нет — при en показывается message. */
+  messageEn?: string;
   severity: 'info' | 'warning' | 'error';
 }
 

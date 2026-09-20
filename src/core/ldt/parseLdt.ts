@@ -101,12 +101,14 @@ export function parseLdtText(text: string, sourceEncoding: SourceEncoding): Pars
     warnings.push({
       code: 'ldt-no-lampset',
       message: 'Файл не содержит данных о комплекте ламп (число наборов = 0) — использованы значения по умолчанию (1 лампа, поток не задан).',
+      messageEn: 'The file has no lamp-set data (number of sets = 0) — defaults used (1 lamp, flux unset).',
       severity: 'info',
     });
   } else if (nSets > 1) {
     warnings.push({
       code: 'ldt-multi-lampset',
       message: `Файл содержит ${nSets} наборов ламп — использован только первый`,
+      messageEn: `The file has ${nSets} lamp sets — only the first is used`,
       severity: 'info',
     });
   }
@@ -150,6 +152,7 @@ export function parseLdtText(text: string, sourceEncoding: SourceEncoding): Pars
     warnings.push({
       code: 'ldt-truncated',
       message: 'Файл короче, чем требует заголовок EULUMDAT (Mc/Ng) — недостающие значения заменены нулями. Проверьте результат.',
+      messageEn: 'The file is shorter than the EULUMDAT header requires (Mc/Ng) — missing values filled with zeros. Check the result.',
       severity: 'error',
     });
   }
@@ -175,6 +178,8 @@ export function parseLdtText(text: string, sourceEncoding: SourceEncoding): Pars
       code: 'ldt-isym3-shift',
       message:
         'Симметрия LDT относительно плоскости C90–C270: азимут переиндексирован на −90°, чтобы совпасть с внутренним представлением. C0 в редакторе соответствует исходному C90 файла.',
+      messageEn:
+        'LDT symmetry about the C90–C270 plane: azimuth reindexed by −90° to match the internal representation. C0 in the editor corresponds to the original file\'s C90.',
       severity: 'info',
     });
   } else {
@@ -236,6 +241,7 @@ export function parseLdtText(text: string, sourceEncoding: SourceEncoding): Pars
   warnings.push({
     code: 'ldt-import',
     message: `Файл импортирован из EULUMDAT (.ldt) и сконвертирован в модель LM-63. Downward Flux Fraction ${fmtPct(dff)} и Light Output Ratio ${fmtPct(lorl)} из исходного файла в поля LM-63 не переносятся — при необходимости сверьте отдельно. Сохранение всегда выполняется в формате IES.`,
+    messageEn: `Imported from EULUMDAT (.ldt) and converted to the LM-63 model. Downward Flux Fraction ${fmtPct(dff)} and Light Output Ratio ${fmtPct(lorl)} from the source file are not carried into LM-63 fields — verify separately if needed. Output is always saved as IES.`,
     severity: 'info',
   });
 

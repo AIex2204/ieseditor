@@ -355,14 +355,14 @@ function checkAngleGrid(doc: PhotometryDoc, L: LFn): AuditCheck {
 }
 
 /** Замечания парсера (формат файла) — включаем в общий отчёт, чтобы проверка была одна. */
-function checksFromWarnings(doc: PhotometryDoc, L: LFn): AuditCheck[] {
+function checksFromWarnings(doc: PhotometryDoc, L: LFn, lang: Lang): AuditCheck[] {
   return doc.warnings
     .filter((w) => w.code !== 'negative-candela' && w.code !== 'non-monotonic-angles') // уже покрыты checkAngleGrid
     .map((w, i) => ({
       id: `parse-${w.code}-${i}`,
       title: L('При чтении файла', 'While reading the file'),
       severity: w.severity === 'error' ? ('error' as const) : w.severity === 'warning' ? ('warning' as const) : ('info' as const),
-      detail: w.message,
+      detail: lang === 'en' && w.messageEn ? w.messageEn : w.message,
     }));
 }
 
@@ -381,7 +381,7 @@ export function auditDoc(doc: PhotometryDoc, lang: Lang = 'ru'): AuditReport {
     checkPlateaus(doc, L),
     checkDimensions(doc, L),
     checkKeywords(doc, L),
-    ...checksFromWarnings(doc, L),
+    ...checksFromWarnings(doc, L, lang),
   ].filter((c): c is AuditCheck => c !== null);
 
   const hasError = checks.some((c) => c.severity === 'error');

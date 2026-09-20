@@ -25,6 +25,7 @@ export function toMeters(doc: PhotometryDoc): PhotometryDoc {
       {
         code: 'units-converted',
         message: 'Габариты в файле были заданы в футах — пересчитаны в метры при загрузке.',
+        messageEn: 'Dimensions in the file were in feet — converted to meters on load.',
         severity: 'info',
       },
     ],

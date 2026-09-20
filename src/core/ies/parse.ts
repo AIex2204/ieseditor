@@ -93,12 +93,13 @@ function parseHeader(lines: string[], startIndex: number, warnings: WarningItem[
       warnings.push({
         code: 'unexpected-line',
         message: `Нераспознанная строка до TILT=: "${line}"`,
+        messageEn: `Unrecognized line before TILT=: "${line}"`,
         severity: 'warning',
       });
     }
   }
 
-  warnings.push({ code: 'no-tilt-line', message: 'Не найдена строка TILT=', severity: 'error' });
+  warnings.push({ code: 'no-tilt-line', message: 'Не найдена строка TILT=', messageEn: 'No TILT= line found', severity: 'error' });
   return { keywords, tiltMode: 'NONE', nextLineIndex: i };
 }
 
@@ -130,7 +131,7 @@ export function parseIesText(text: string, sourceEncoding: SourceEncoding): Pars
       tilt.angles = angles;
       tilt.factors = factors;
     } catch (e) {
-      warnings.push({ code: 'tilt-parse-error', message: `Ошибка разбора TILT=INCLUDE: ${(e as Error).message}`, severity: 'error' });
+      warnings.push({ code: 'tilt-parse-error', message: `Ошибка разбора TILT=INCLUDE: ${(e as Error).message}`, messageEn: `Error parsing TILT=INCLUDE: ${(e as Error).message}`, severity: 'error' });
     }
   }
 
@@ -180,6 +181,7 @@ export function parseIesText(text: string, sourceEncoding: SourceEncoding): Pars
       warnings.push({
         code: 'trailing-data',
         message: `После таблицы силы света осталось ${tok.remaining()} лишних чисел`,
+        messageEn: `${tok.remaining()} extra numbers left after the intensity table`,
         severity: 'warning',
       });
     }
@@ -187,11 +189,11 @@ export function parseIesText(text: string, sourceEncoding: SourceEncoding): Pars
     warnings.push({ code: 'numeric-parse-error', message: (e as Error).message, severity: 'error' });
   }
 
-  validateMonotonic(vertAngles, 'вертикальных углов (γ)', warnings);
-  validateMonotonic(horizAngles, 'горизонтальных углов (C)', warnings);
+  validateMonotonic(vertAngles, 'вертикальных углов (γ)', 'vertical angles (γ)', warnings);
+  validateMonotonic(horizAngles, 'горизонтальных углов (C)', 'horizontal angles (C)', warnings);
   for (let i = 0; i < candela.length; i++) {
     if (candela[i] < 0) {
-      warnings.push({ code: 'negative-candela', message: 'В таблице силы света есть отрицательные значения', severity: 'error' });
+      warnings.push({ code: 'negative-candela', message: 'В таблице силы света есть отрицательные значения', messageEn: 'The intensity table contains negative values', severity: 'error' });
       break;
     }
   }
@@ -223,12 +225,13 @@ export function parseIesText(text: string, sourceEncoding: SourceEncoding): Pars
   return { doc };
 }
 
-function validateMonotonic(values: number[], label: string, warnings: WarningItem[]): void {
+function validateMonotonic(values: number[], label: string, labelEn: string, warnings: WarningItem[]): void {
   for (let i = 1; i < values.length; i++) {
     if (values[i] < values[i - 1]) {
       warnings.push({
         code: 'non-monotonic-angles',
         message: `Таблица ${label} не является неубывающей (индекс ${i}: ${values[i - 1]} → ${values[i]})`,
+        messageEn: `The ${labelEn} array is not non-decreasing (index ${i}: ${values[i - 1]} → ${values[i]})`,
         severity: 'error',
       });
       return;
