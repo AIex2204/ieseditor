@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -16,8 +16,20 @@ if (!samplesAvailable) {
   );
 }
 
+// Номер версии берётся из package.json, чтобы он был в одном месте и совпадал
+// с вершиной CHANGELOG.md. В «О программе» показываем версию и дату сборки:
+// без них по жалобе нельзя понять, какая сборка у пользователя в браузере.
+const pkg = JSON.parse(readFileSync(fileURLToPath(new URL('./package.json', import.meta.url)), 'utf-8')) as {
+  version: string;
+};
+const buildDate = new Date().toISOString().slice(0, 10);
+
 export default defineConfig({
   plugins: [react()],
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version),
+    __BUILD_DATE__: JSON.stringify(buildDate),
+  },
   test: {
     environment: 'node',
     include: samplesAvailable ? ['tests/**/*.test.ts'] : ['tests/ldt.test.ts'],

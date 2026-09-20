@@ -49,9 +49,10 @@ export function MetricsPanel({ doc }: { doc: PhotometryDoc }) {
     const planeLabel = single ? '' : `, ${p.label.replace(/\s–\s/, '–')}`;
     rows.push([
       `Тип КСС${planeLabel}`,
-      p.type !== null ? `${p.type} — ${GOST_CURVE_NAMES[p.type]}` : '—',
+      p.type !== null ? p.type : '—',
       p.type !== null
-        ? `Определён по направлению максимума этой плоскости (γ = ${fmt(p.peakGamma)}°)` +
+        ? `${p.type} — ${GOST_CURVE_NAMES[p.type]}. ` +
+          `Определён по направлению максимума этой плоскости (γ = ${fmt(p.peakGamma)}°)` +
           (p.fullAngle !== null ? ` и полному углу 2γ½ = ${fmt(p.fullAngle)}°` : '') +
           `; Imin/Imax = ${fmt(p.uniformity * 100, 0)}%. Справочно, по границам ГОСТ Р 54350 — для сертификации нужен первоисточник.`
         : undefined,

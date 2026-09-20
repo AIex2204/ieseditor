@@ -108,7 +108,9 @@ export function PolarChart({
           const pLeft = projectGridPoint(cx, cy, outerR, -a);
           const labelRight = projectGridPoint(cx, cy, outerR + 13, a);
           const labelLeft = projectGridPoint(cx, cy, outerR + 13, -a);
-          const skipLabel = a === 0 || a === 90; // 0° закрыт заголовком сверху, 90° — подписью азимута сбоку
+          // надир внизу: 180° ушло наверх под заголовок, 90° закрыто подписью азимута
+          const skipLabel = a === 90 || a === 180;
+          const onAxis = a === 0 || a === 180; // левая и правая ветви совпадают — подписываем один раз
           return (
             <g key={a}>
               <line x1={cx} y1={cy} x2={pRight.x} y2={pRight.y} stroke="var(--border)" strokeWidth={1} />
@@ -120,7 +122,7 @@ export function PolarChart({
                   {a}°
                 </text>
               )}
-              {!skipLabel && a !== 180 && (
+              {!skipLabel && !onAxis && (
                 <text x={labelLeft.x} y={labelLeft.y} fontSize={10} fill="var(--muted)" textAnchor="middle" dominantBaseline="middle">
                   {a}°
                 </text>

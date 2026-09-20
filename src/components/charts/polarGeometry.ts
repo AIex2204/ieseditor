@@ -22,7 +22,8 @@ export interface Point {
 /**
  * Проецирует точку меридиана (signedGamma: ≥0 — ветвь cPlane, <0 — ветвь
  * cPlane+180, |signedGamma| — угол от надира) в пиксели SVG.
- * 0° — верх, 90° — левый/правый край, 180° — низ.
+ * Надир (0°) смотрит вниз — как светит сам светильник: 0° — низ,
+ * 90° — левый/правый край, 180° — верх.
  */
 export function projectMeridianPoint(
   cx: number,
@@ -38,7 +39,7 @@ export function projectMeridianPoint(
   const angleRad = (gammaAbs * Math.PI) / 180;
   const frac = radiusFraction(value, radialMax, mode);
   const dx = side * frac * outerR * Math.sin(angleRad);
-  const dy = -frac * outerR * Math.cos(angleRad);
+  const dy = frac * outerR * Math.cos(angleRad);
   return { x: cx + dx, y: cy + dy };
 }
 
@@ -47,7 +48,7 @@ export function projectGridPoint(cx: number, cy: number, r: number, signedGammaD
   const gammaAbs = Math.abs(signedGammaDeg);
   const side = signedGammaDeg >= 0 ? 1 : -1;
   const angleRad = (gammaAbs * Math.PI) / 180;
-  return { x: cx + side * r * Math.sin(angleRad), y: cy - r * Math.cos(angleRad) };
+  return { x: cx + side * r * Math.sin(angleRad), y: cy + r * Math.cos(angleRad) };
 }
 
 /** Кратчайшее угловое расстояние между двумя азимутами по кругу, градусы в [0,180]. */
