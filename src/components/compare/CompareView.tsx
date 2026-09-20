@@ -109,9 +109,8 @@ export function CompareView() {
           </select>
         </label>
         {addFileControl}
-        <div className="toolbar-spacer" />
         <button
-          className={`btn ${absolute ? 'active' : ''}`}
+          className={`btn compare-scale ${absolute ? 'active' : ''}`}
           onClick={() => setAbsolute((v) => !v)}
           title={
             absolute

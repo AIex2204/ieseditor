@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { PhotometryDoc } from '../../core/ies/types';
 import { auditDoc, formatAuditReport, VERDICT_TEXT, type AuditSeverity } from '../../core/audit/auditDoc';
-import { useT } from '../../i18n/i18n';
+import { useT, useLang } from '../../i18n/i18n';
 
 const MARK: Record<AuditSeverity, string> = {
   error: '⛔',
@@ -12,7 +12,8 @@ const MARK: Record<AuditSeverity, string> = {
 
 export function AuditPanel({ doc, fileName }: { doc: PhotometryDoc; fileName: string }) {
   const t = useT();
-  const report = useMemo(() => auditDoc(doc), [doc]);
+  const lang = useLang();
+  const report = useMemo(() => auditDoc(doc, lang), [doc, lang]);
   const [showPassed, setShowPassed] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -21,7 +22,7 @@ export function AuditPanel({ doc, fileName }: { doc: PhotometryDoc; fileName: st
 
   async function copyReport() {
     try {
-      await navigator.clipboard.writeText(formatAuditReport(fileName, report));
+      await navigator.clipboard.writeText(formatAuditReport(fileName, report, lang));
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {

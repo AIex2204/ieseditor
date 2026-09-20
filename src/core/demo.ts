@@ -10,7 +10,7 @@ export async function loadDemoFile(): Promise<LoadedFile> {
   const res = await fetch(DEMO_URL);
   if (!res.ok) throw new Error('демо-файл недоступен');
   const blob = await res.blob();
-  const file = new File([blob], 'Демо — несимметричная КСС.ies', { type: 'text/plain' });
+  const file = new File([blob], 'demo.ies', { type: 'text/plain' });
   return loadPhotometryFile(file);
 }
 

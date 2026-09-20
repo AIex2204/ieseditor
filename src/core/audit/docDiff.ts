@@ -6,6 +6,9 @@ import type { PhotometryDoc } from '../ies/types';
 import { computeFlux } from '../photometry/flux';
 import { findImax } from '../photometry/metrics';
 
+export type Lang = 'ru' | 'en';
+const L = (lang: Lang, ru: string, en: string): string => (lang === 'en' ? en : ru);
+
 export interface DiffItem {
   label: string;
   before: string;
@@ -51,19 +54,19 @@ function keywordsChanged(a: PhotometryDoc, b: PhotometryDoc): number {
   return changed;
 }
 
-const NUMERIC_FIELDS: { key: keyof PhotometryDoc; label: string; digits?: number }[] = [
-  { key: 'numLamps', label: 'Число ламп', digits: 0 },
-  { key: 'lumensPerLamp', label: 'Поток лампы, лм' },
-  { key: 'candelaMultiplier', label: 'Множитель силы света', digits: 3 },
-  { key: 'inputWatts', label: 'Мощность, Вт' },
-  { key: 'ballastFactor', label: 'Ballast factor', digits: 3 },
-  { key: 'width', label: 'Ширина, м', digits: 3 },
-  { key: 'length', label: 'Длина, м', digits: 3 },
-  { key: 'height', label: 'Высота, м', digits: 3 },
+const NUMERIC_FIELDS: { key: keyof PhotometryDoc; label: string; en: string; digits?: number }[] = [
+  { key: 'numLamps', label: 'Число ламп', en: 'Number of lamps', digits: 0 },
+  { key: 'lumensPerLamp', label: 'Поток лампы, лм', en: 'Lamp flux, lm' },
+  { key: 'candelaMultiplier', label: 'Множитель силы света', en: 'Candela multiplier', digits: 3 },
+  { key: 'inputWatts', label: 'Мощность, Вт', en: 'Power, W' },
+  { key: 'ballastFactor', label: 'Ballast factor', en: 'Ballast factor', digits: 3 },
+  { key: 'width', label: 'Ширина, м', en: 'Width, m', digits: 3 },
+  { key: 'length', label: 'Длина, м', en: 'Length, m', digits: 3 },
+  { key: 'height', label: 'Высота, м', en: 'Height, m', digits: 3 },
 ];
 
 /** Пустой массив означает, что файл не менялся. */
-export function diffDocs(original: PhotometryDoc, working: PhotometryDoc): DiffItem[] {
+export function diffDocs(original: PhotometryDoc, working: PhotometryDoc, lang: Lang = 'ru'): DiffItem[] {
   if (original === working) return [];
   const items: DiffItem[] = [];
 
@@ -72,7 +75,7 @@ export function diffDocs(original: PhotometryDoc, working: PhotometryDoc): DiffI
   if (numbersDiffer(fluxBefore.totalLumens, fluxAfter.totalLumens, 0.05)) {
     const delta = fluxBefore.totalLumens > 0 ? (fluxAfter.totalLumens / fluxBefore.totalLumens - 1) * 100 : 0;
     items.push({
-      label: 'Расчётный поток, лм',
+      label: L(lang, 'Расчётный поток, лм', 'Computed flux, lm'),
       before: fmt(fluxBefore.totalLumens),
       after: `${fmt(fluxAfter.totalLumens)} (${delta >= 0 ? '+' : ''}${fmt(delta, 2)}%)`,
     });
@@ -81,33 +84,33 @@ export function diffDocs(original: PhotometryDoc, working: PhotometryDoc): DiffI
   const imaxBefore = findImax(original);
   const imaxAfter = findImax(working);
   if (numbersDiffer(imaxBefore.value, imaxAfter.value, 0.05)) {
-    items.push({ label: 'Imax, кд', before: fmt(imaxBefore.value), after: fmt(imaxAfter.value) });
+    items.push({ label: L(lang, 'Imax, кд', 'Imax, cd'), before: fmt(imaxBefore.value), after: fmt(imaxAfter.value) });
   }
   if (numbersDiffer(imaxBefore.gamma, imaxAfter.gamma, 0.01) || numbersDiffer(imaxBefore.c, imaxAfter.c, 0.01)) {
     items.push({
-      label: 'Направление Imax',
+      label: L(lang, 'Направление Imax', 'Imax direction'),
       before: `γ=${fmt(imaxBefore.gamma)}° C=${fmt(imaxBefore.c)}°`,
       after: `γ=${fmt(imaxAfter.gamma)}° C=${fmt(imaxAfter.c)}°`,
     });
   }
 
   if (!anglesEqual(original.vertAngles, working.vertAngles) || !anglesEqual(original.horizAngles, working.horizAngles)) {
-    items.push({ label: 'Угловая сетка (γ × C)', before: gridLabel(original), after: gridLabel(working) });
+    items.push({ label: L(lang, 'Угловая сетка (γ × C)', 'Angle grid (γ × C)'), before: gridLabel(original), after: gridLabel(working) });
   }
 
   const changedCells = countChangedCells(original, working);
   if (changedCells === null) {
     items.push({
-      label: 'Таблица силы света',
-      before: `${original.candela.length} значений`,
-      after: `${working.candela.length} значений (пересчитана)`,
+      label: L(lang, 'Таблица силы света', 'Intensity table'),
+      before: `${original.candela.length} ${L(lang, 'значений', 'values')}`,
+      after: `${working.candela.length} ${L(lang, 'значений (пересчитана)', 'values (resampled)')}`,
     });
   } else if (changedCells > 0) {
     const share = (changedCells / Math.max(original.candela.length, 1)) * 100;
     items.push({
-      label: 'Значения силы света',
-      before: `${original.candela.length} значений`,
-      after: `изменено ${changedCells} (${fmt(share, 1)}%)`,
+      label: L(lang, 'Значения силы света', 'Intensity values'),
+      before: `${original.candela.length} ${L(lang, 'значений', 'values')}`,
+      after: `${L(lang, 'изменено', 'changed')} ${changedCells} (${fmt(share, 1)}%)`,
     });
   }
 
@@ -115,15 +118,15 @@ export function diffDocs(original: PhotometryDoc, working: PhotometryDoc): DiffI
     const a = original[f.key] as number;
     const b = working[f.key] as number;
     if (numbersDiffer(a, b, 1e-9)) {
-      items.push({ label: f.label, before: fmt(a, f.digits ?? 1), after: fmt(b, f.digits ?? 1) });
+      items.push({ label: L(lang, f.label, f.en), before: fmt(a, f.digits ?? 1), after: fmt(b, f.digits ?? 1) });
     }
   }
 
   if (original.photometricType !== working.photometricType) {
-    items.push({ label: 'Тип фотометрии', before: String(original.photometricType), after: String(working.photometricType) });
+    items.push({ label: L(lang, 'Тип фотометрии', 'Photometric type'), before: String(original.photometricType), after: String(working.photometricType) });
   }
   if (original.format !== working.format) {
-    items.push({ label: 'Версия формата', before: original.format, after: working.format });
+    items.push({ label: L(lang, 'Версия формата', 'Format version'), before: original.format, after: working.format });
   }
   if (original.tilt.mode !== working.tilt.mode) {
     items.push({ label: 'TILT', before: original.tilt.mode, after: working.tilt.mode });
@@ -132,9 +135,9 @@ export function diffDocs(original: PhotometryDoc, working: PhotometryDoc): DiffI
   const kwChanged = keywordsChanged(original, working);
   if (kwChanged > 0) {
     items.push({
-      label: 'Ключевые слова шапки',
-      before: `${original.keywords.length} шт.`,
-      after: `изменено/добавлено ${kwChanged}`,
+      label: L(lang, 'Ключевые слова шапки', 'Header keywords'),
+      before: `${original.keywords.length} ${L(lang, 'шт.', 'total')}`,
+      after: `${L(lang, 'изменено/добавлено', 'changed/added')} ${kwChanged}`,
     });
   }
 
@@ -146,30 +149,43 @@ export function formatProcessingReport(
   originalName: string,
   exportName: string,
   items: DiffItem[],
-  generatedAt = new Date()
+  generatedAt = new Date(),
+  lang: Lang = 'ru'
 ): string {
-  const lines = [
-    'Отчёт об обработке фотометрического файла',
-    '',
-    `Выгружаемый файл: ${exportName}`,
-    `Исходное состояние: ${originalName} (на момент загрузки или последнего сохранения версии)`,
-    `Дата обработки: ${generatedAt.toLocaleString('ru-RU')}`,
-    '',
-  ];
+  const locale = lang === 'en' ? 'en-US' : 'ru-RU';
+  const lines =
+    lang === 'en'
+      ? [
+          'Photometric file processing report',
+          '',
+          `Exported file: ${exportName}`,
+          `Original state: ${originalName} (at load time or last saved version)`,
+          `Processed on: ${generatedAt.toLocaleString(locale)}`,
+          '',
+        ]
+      : [
+          'Отчёт об обработке фотометрического файла',
+          '',
+          `Выгружаемый файл: ${exportName}`,
+          `Исходное состояние: ${originalName} (на момент загрузки или последнего сохранения версии)`,
+          `Дата обработки: ${generatedAt.toLocaleString(locale)}`,
+          '',
+        ];
 
   if (items.length === 0) {
-    lines.push('Файл не изменялся — выгружен в том виде, в котором был загружен.');
+    lines.push(L(lang, 'Файл не изменялся — выгружен в том виде, в котором был загружен.', 'The file was not changed — exported exactly as loaded.'));
   } else {
-    lines.push('Изменения относительно исходного файла:', '');
+    lines.push(L(lang, 'Изменения относительно исходного файла:', 'Changes vs. the original file:'), '');
     for (const item of items) {
       lines.push(`- ${item.label}: ${item.before} → ${item.after}`);
     }
     lines.push(
       '',
-      'Исходный файл приложен в папке «Исходный файл» — обработку можно перепроверить, сравнив его с выгруженным.'
+      L(lang, 'Исходный файл приложен в папке «Исходный файл» — обработку можно перепроверить, сравнив его с выгруженным.',
+        'The source file is included in the “Source file” folder — the processing can be re-verified by comparing it with the export.')
     );
   }
 
-  lines.push('', 'Отчёт подготовлен в www.ieseditor.ru');
+  lines.push('', L(lang, 'Отчёт подготовлен в www.ieseditor.ru', 'Report generated at www.ieseditor.ru'));
   return lines.join('\n');
 }

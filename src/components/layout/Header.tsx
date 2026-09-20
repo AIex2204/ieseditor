@@ -3,7 +3,7 @@ import { activeDoc, useActiveDocEntry, useAppStore, type ViewMode } from '../../
 import { saveIesFile } from '../../core/ies/exportFile';
 import { saveArchive } from '../../core/ies/exportArchive';
 import { renderChartsForExport } from '../charts/renderForExport';
-import { useT } from '../../i18n/i18n';
+import { useT, useI18n } from '../../i18n/i18n';
 import { LangSwitch } from '../common/LangSwitch';
 
 const NAV: { id: ViewMode; label: string }[] = [
@@ -53,6 +53,7 @@ export function Header() {
         originalName: entry.name,
         originalDoc: entry.originalDoc,
         charts,
+        lang: useI18n.getState().lang,
       });
     } finally {
       setBusy(false);

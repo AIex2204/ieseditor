@@ -997,3 +997,9 @@
   color: var(--muted);
   font-size: 12px;
 }
+
+/* В «Сравнении» кнопка масштаба группируется с остальными контролами, а не
+   висит одиноко у правого края. */
+.compare-toolbar .compare-scale {
+  margin-left: 4px;
+}

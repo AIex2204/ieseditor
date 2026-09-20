@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import type { PhotometryDoc } from '../../core/ies/types';
 import { diffDocs } from '../../core/audit/docDiff';
-import { useT } from '../../i18n/i18n';
+import { useT, useLang } from '../../i18n/i18n';
 
 /**
  * Что именно отличается от исходного файла. Нужна не ради красоты: перед
@@ -10,7 +10,8 @@ import { useT } from '../../i18n/i18n';
  */
 export function ChangesPanel({ originalDoc, workingDoc }: { originalDoc: PhotometryDoc; workingDoc: PhotometryDoc }) {
   const t = useT();
-  const items = useMemo(() => diffDocs(originalDoc, workingDoc), [originalDoc, workingDoc]);
+  const lang = useLang();
+  const items = useMemo(() => diffDocs(originalDoc, workingDoc, lang), [originalDoc, workingDoc, lang]);
   if (items.length === 0) return null;
 
   return (
