@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { parseLdtText } from '../src/core/ldt/parseLdt';
+import { interpolateCandela } from '../src/core/photometry/interpolate';
 
 function buildLdt(): string {
   const lines = [
@@ -121,6 +122,65 @@ describe('parseLdtText — импорт EULUMDAT (.ldt)', () => {
     expect(doc.candela[3 * 3 + 1]).toBeCloseTo(650, 6);
     expect(doc.lumensPerLamp).toBe(-1);
     expect(doc.warnings.some((w) => w.code === 'ldt-no-lampset')).toBe(true);
+    expect(doc.warnings.some((w) => w.code === 'ldt-truncated')).toBe(false);
+  });
+
+  // Спецификация EULUMDAT: для симметрий Isym 2/3/4 в файле записано меньше
+  // C-плоскостей (Mc2 = Mc/2+1 или Mc/4+1), хотя список углов C содержит все
+  // Mc значений. Раньше парсер читал Mc блоков силы света и добивал остаток
+  // нулями — половина азимута оказывалась пустой (КСС «резалась пополам»).
+  // Строим корректные файлы и проверяем, что обе половины непустые.
+  function buildSymLdt(isym: number, mc: number, gammas: number[], planes: number[][]): string {
+    const dc = 360 / mc;
+    const cAngles = Array.from({ length: mc }, (_, i) => String(i * dc));
+    const lines = [
+      'ACME', '1', String(isym), String(mc), String(dc), String(gammas.length), '45',
+      'RPT', 'Sym Luminaire', 'CAT', 'f.ldt', 'date',
+      '300', '300', '100', '280', '280', '0', '0', '0', '0', '60', '80', '1', '0',
+      '1', '1', 'LED', '1000', '4000', '80', '10',
+      ...Array(10).fill('0'),
+      ...cAngles,
+      ...gammas.map(String),
+      ...planes.flatMap((row) => row.map(String)),
+    ];
+    return lines.join('\r\n');
+  }
+
+  it('Isym=4 (квадрант): читается Mc/4+1 плоскостей, обе половины азимута непустые', () => {
+    // Mc=8 → хранится 3 плоскости (C 0/45/90); scale = conv*flux/1000 = 1
+    const planes = [
+      [1000, 700, 0], // C=0
+      [900, 600, 0], // C=45
+      [800, 500, 0], // C=90
+    ];
+    const { doc } = parseLdtText(buildSymLdt(4, 8, [0, 45, 90], planes), 'utf-8');
+    expect(doc.numHorizAngles).toBe(3);
+    expect(doc.horizAngles).toEqual([0, 45, 90]);
+    // при квадрантной симметрии C=180 отражается в C=0, C=270 — в C=90:
+    // обе «левые» ветви диаграмм должны быть непустыми
+    expect(interpolateCandela(doc, 45, 0)).toBeCloseTo(700, 6);
+    expect(interpolateCandela(doc, 45, 180)).toBeCloseTo(700, 6);
+    expect(interpolateCandela(doc, 45, 90)).toBeCloseTo(500, 6);
+    expect(interpolateCandela(doc, 45, 270)).toBeCloseTo(500, 6);
+    expect(doc.warnings.some((w) => w.code === 'ldt-truncated')).toBe(false);
+  });
+
+  it('Isym=2 (относительно C0–C180): читается Mc/2+1 плоскостей, C270 отражается в C90', () => {
+    // Mc=8 → хранится 5 плоскостей (C 0/45/90/135/180)
+    const planes = [
+      [1000, 700, 0], // C=0
+      [900, 600, 0], // C=45
+      [800, 500, 0], // C=90
+      [700, 400, 0], // C=135
+      [600, 300, 0], // C=180
+    ];
+    const { doc } = parseLdtText(buildSymLdt(2, 8, [0, 45, 90], planes), 'utf-8');
+    expect(doc.numHorizAngles).toBe(5);
+    expect(doc.horizAngles).toEqual([0, 45, 90, 135, 180]);
+    // двусторонняя симметрия: I(C)=I(360−C). C=270 ↔ C=90, C=315 ↔ C=45
+    expect(interpolateCandela(doc, 45, 90)).toBeCloseTo(500, 6);
+    expect(interpolateCandela(doc, 45, 270)).toBeCloseTo(500, 6);
+    expect(interpolateCandela(doc, 45, 180)).toBeCloseTo(300, 6);
     expect(doc.warnings.some((w) => w.code === 'ldt-truncated')).toBe(false);
   });
 });

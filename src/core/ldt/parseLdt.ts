@@ -118,9 +118,29 @@ export function parseLdtText(text: string, sourceEncoding: SourceEncoding): Pars
   const gAngles: number[] = [];
   for (let k = 0; k < ng; k++) gAngles.push(toNum(next()));
 
-  const planeCount = isym === 1 ? 1 : mc;
+  // Сколько C-плоскостей реально записано в файле, зависит от симметрии (в
+  // спецификации EULUMDAT это Mc2): Isym 0 → Mc, 1 → 1, 2/3 → Mc/2+1,
+  // 4 → Mc/4+1. Углы C при этом всегда перечислены за весь круг (Mc штук).
+  // Раньше всегда читалось Mc блоков силы света — для Isym 2/3/4 это
+  // утаскивало несуществующие плоскости (добивались нулями), симметрия
+  // определялась как «полный круг», и половина азимута оказывалась пустой:
+  // КСС «резалась пополам» по кругу. Читаем ровно Mc2 блоков, но если файл
+  // реально содержит другое число (нестандартная запись) — доверяем факту.
+  const expectedStored =
+    isym === 1 ? 1 : isym === 2 || isym === 3 ? Math.floor(mc / 2) + 1 : isym === 4 ? Math.floor(mc / 4) + 1 : mc;
+  let availableLines = 0;
+  for (let k = i; k < lines.length; k++) if (lines[k].length > 0) availableLines++;
+  const blocksAvailable = Math.floor(availableLines / ng);
+  // Если данных хватает на полный круг (Mc плоскостей) — файл записан
+  // несимметрично, даже если Isym говорит иначе; иначе читаем ровно столько,
+  // сколько реально есть (симметричная запись Mc2 плоскостей).
+  const full = isym === 0 || (mc > 1 && blocksAvailable >= mc);
+  const storedCount = full
+    ? Math.max(1, Math.min(mc, blocksAvailable || mc))
+    : Math.max(1, blocksAvailable > 0 ? Math.min(expectedStored, blocksAvailable) : expectedStored);
+
   const rawPlanes: number[][] = [];
-  for (let p = 0; p < planeCount; p++) {
+  for (let p = 0; p < storedCount; p++) {
     const row: number[] = [];
     for (let g = 0; g < ng; g++) row.push(toNum(next()));
     rawPlanes.push(row);
@@ -134,17 +154,19 @@ export function parseLdtText(text: string, sourceEncoding: SourceEncoding): Pars
     });
   }
 
+  // C-углы записанных плоскостей: для Isym 0/2/4 — первые storedCount из
+  // списка (начинаются с C=0), для Isym 3 — участок 90°…270° со сдвигом.
   let horizAngles: number[];
-  if (isym === 1) {
+  if (isym === 1 && !full) {
     horizAngles = [0];
-  } else if (isym === 3) {
-    // Хранится в порядке 270°→90° (убывание). Разворачиваем в стандартную
-    // "двустороннюю" симметрию 0…180° сдвигом системы отсчёта на -90°:
-    // I(C) = I(180−C) в исходных координатах ⇔ I'(C′) = I'(360−C′) при
-    // C′ = C−90 — приложение уже умеет разворачивать такую симметрию
-    // (см. core/photometry/symmetry.ts). C=0 в редакторе после импорта
-    // соответствует исходному C=90 файла.
-    horizAngles = cAngles.map((c) => {
+  } else if (isym === 3 && !full) {
+    // Плоскости хранятся от C=90°. Разворачиваем в стандартную двустороннюю
+    // симметрию 0…180° сдвигом системы отсчёта на −90°: I(C)=I(180−C) в
+    // исходных координатах ⇔ I'(C′)=I'(360−C′) при C′=C−90 — приложение уже
+    // умеет разворачивать такую симметрию (см. core/photometry/symmetry.ts).
+    const start = Math.round(mc / 4); // индекс C=90° в списке углов
+    const src = cAngles.slice(start, start + storedCount);
+    horizAngles = (src.length === storedCount ? src : cAngles.slice(0, storedCount)).map((c) => {
       let v = (c - 90) % 360;
       if (v < 0) v += 360;
       return v;
@@ -156,7 +178,7 @@ export function parseLdtText(text: string, sourceEncoding: SourceEncoding): Pars
       severity: 'info',
     });
   } else {
-    horizAngles = cAngles.slice(0, planeCount);
+    horizAngles = cAngles.slice(0, storedCount);
   }
 
   const order = horizAngles.map((_, idx) => idx).sort((a, b) => horizAngles[a] - horizAngles[b]);
