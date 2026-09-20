@@ -130,9 +130,6 @@ export function MobileApp() {
           <button className="btn btn-accent m-fix" onClick={runFix}>
             {fixed ? t('Исправлено ✓') : t('Исправить IES')}
           </button>
-          <p className="m-fix-note">
-            {t('Приводит файл в порядок автоматически. Ниже — те же шаги по отдельности, если нужна точная настройка.')}
-          </p>
 
           <div className="m-tools">
             {ONE_TAP.map((tItem) => (

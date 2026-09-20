@@ -87,9 +87,6 @@ export function ToolsPanel({ docId, sourceDoc, hasPendingChanges, geometryReady 
       >
         {fixed ? t('Исправлено ✓') : t('Исправить IES')}
       </button>
-      <p className="tools-fix-note">
-        {t('Приводит файл в порядок автоматически. Ниже — те же шаги по отдельности, если нужна точная настройка.')}
-      </p>
 
       <div className="tools-grid">
         {TOOLS.map((tItem) => (

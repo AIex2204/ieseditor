@@ -193,16 +193,9 @@
 
 .m-fix {
   width: 100%;
-  margin-top: 16px;
+  margin: 16px 0 14px;
   padding: 15px;
   font-size: 15px;
-}
-.m-fix-note {
-  margin: 8px 2px 4px;
-  font-size: 12px;
-  color: var(--muted);
-  line-height: 1.4;
-  text-align: center;
 }
 .m-rotate {
   margin-top: 16px;
