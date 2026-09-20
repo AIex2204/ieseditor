@@ -8,7 +8,7 @@ import react from '@vitejs/plugin-react';
 // поэтому в свежем клоне такие тесты не запускаются — вместо непонятного
 // ENOENT в консоль выводится подсказка. Как подложить свои образцы,
 // написано в README, раздел «Тесты».
-const samplesAvailable = existsSync(fileURLToPath(new URL('./Input/', import.meta.url)));
+const samplesAvailable = existsSync(fileURLToPath(new URL('./Input/Эллипс.IES', import.meta.url)));
 if (!samplesAvailable) {
   console.warn(
     '\n[tests] Каталог Input/ с образцами фотометрии не найден — тесты, которым нужны реальные файлы,\n' +

@@ -97,21 +97,25 @@ export function meridianHalfWidth(
   if (peak.value < thresholdValue) {
     return { fullAngle: null, lo: null, hi: null, peak, thresholdValue };
   }
-  const peakSigned = toSigned(cPlane, peak);
 
-  let hi: MeridianPoint | null = null;
-  for (let s = peakSigned; s <= gMax + 1e-9; s += step) {
+  // Берём КРАЙНИЕ пересечения уровня: самую левую и самую правую точки
+  // меридиана, где сила света достигает порога. Раньше мерили от пика до
+  // ПЕРВОГО падения ниже порога — у двугорбых (batwing) КСС провал между
+  // рогами уходит ниже 50%, и ширина считалась только по одному рогу. Крайние
+  // пересечения охватывают оба рога; для однолепестковых КСС результат тот же.
+  let lo: MeridianPoint | null = null;
+  for (let s = -gMax; s <= gMax + 1e-9; s += step) {
     const p = meridianAt(doc, cPlane, s);
-    if (p.value <= thresholdValue) {
-      hi = p;
+    if (p.value >= thresholdValue) {
+      lo = p;
       break;
     }
   }
-  let lo: MeridianPoint | null = null;
-  for (let s = peakSigned; s >= -gMax - 1e-9; s -= step) {
+  let hi: MeridianPoint | null = null;
+  for (let s = gMax; s >= -gMax - 1e-9; s -= step) {
     const p = meridianAt(doc, cPlane, s);
-    if (p.value <= thresholdValue) {
-      lo = p;
+    if (p.value >= thresholdValue) {
+      hi = p;
       break;
     }
   }

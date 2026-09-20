@@ -20,8 +20,15 @@ export const SAMPLE_FILES = [
  * лабораторий. Тесты, которым они нужны, пропускаются, если каталога нет:
  * вызывайте это в describe.skipIf / it.skipIf (см. README, раздел «Тесты»).
  */
+export function hasSample(fileName: string): boolean {
+  return existsSync(INPUT_DIR + fileName);
+}
+
+// Каноничный образец — по нему судим, доступен ли полный набор. Пользователь
+// иногда подменяет содержимое Input/ отдельными файлами для проверки; тогда
+// набор считается недоступным и тесты на образцах пропускаются.
 export function samplesAvailable(): boolean {
-  return existsSync(INPUT_DIR);
+  return hasSample('Эллипс.IES');
 }
 
 export function loadSample(fileName: string): PhotometryDoc {
