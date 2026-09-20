@@ -9,6 +9,7 @@ import type { PhotometryDoc } from '../ies/types';
 import { computeFlux } from '../photometry/flux';
 import { beamAngleAtPlanePeak, findImax } from '../photometry/metrics';
 import { detectSymmetry } from '../photometry/symmetry';
+import { warningText } from '../warningText';
 
 export type Lang = 'ru' | 'en';
 type LFn = (ru: string, en: string) => string;
@@ -362,7 +363,7 @@ function checksFromWarnings(doc: PhotometryDoc, L: LFn, lang: Lang): AuditCheck[
       id: `parse-${w.code}-${i}`,
       title: L('При чтении файла', 'While reading the file'),
       severity: w.severity === 'error' ? ('error' as const) : w.severity === 'warning' ? ('warning' as const) : ('info' as const),
-      detail: lang === 'en' && w.messageEn ? w.messageEn : w.message,
+      detail: warningText(w, lang),
     }));
 }
 
