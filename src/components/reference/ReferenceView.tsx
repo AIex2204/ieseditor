@@ -1,370 +1,213 @@
-import { useLang } from '../../i18n/i18n';
+import { useLang, type Lang } from '../../i18n/i18n';
 
-// Справочник по форматам IES (LM-63) и EULUMDAT (LDT). Описание структуры
-// форматов — общедоступный технический факт (interoperability), а не
-// воспроизведение текста стандартов. Тексты самих стандартов сюда не входят.
+// Справочник по форматам IES (LM-63) и EULUMDAT (LDT) в виде аннотированных
+// примеров: реальные строки небольшого валидного файла, под каждой — что это.
+// Оба формата поданы одинаково. Файлы можно скачать и открыть в редакторе.
+// Описание структуры форматов — общедоступный технический факт; тексты самих
+// стандартов сюда не входят. Компании условные (ООО «Свет»).
+
+interface Block {
+  code: string;
+  ru: string;
+  en: string;
+}
+
+const IES_BLOCKS: Block[] = [
+  {
+    code: 'IESNA:LM-63-2002',
+    ru: 'Версия стандарта LM-63 (редакция 2002 года). С этой строки начинается файл; по ней программа-читатель выбирает набор правил. Бывают редакции 1986, 1991, 1995, 2002, 2019.',
+    en: 'The LM-63 standard revision (2002). The file starts with this line; a reader uses it to pick the rule set. Revisions include 1986, 1991, 1995, 2002, 2019.',
+  },
+  {
+    code: '[TEST] 4521-2026\n[TESTLAB] Лаборатория светотехники\n[MANUFAC] ООО "Свет"\n[LUMCAT] SVET-DL-20\n[LUMINAIRE] Светодиодный даунлайт 20 Вт\n[ISSUEDATE] 2026-02-10',
+    ru: 'Ключевые слова в квадратных скобках: номер протокола [TEST], лаборатория [TESTLAB], производитель [MANUFAC], артикул [LUMCAT], название [LUMINAIRE], дата [ISSUEDATE]. Состав и порядок — на усмотрение автора файла.',
+    en: 'Keywords in square brackets: report number [TEST], lab [TESTLAB], manufacturer [MANUFAC], catalog number [LUMCAT], name [LUMINAIRE], date [ISSUEDATE]. Which keys appear, and their order, is up to the file’s author.',
+  },
+  {
+    code: 'TILT=NONE',
+    ru: 'Наклон при измерении. NONE — светильник измерен в штатном положении (самый частый случай). Иначе здесь были бы данные наклона (TILT=INCLUDE) или имя внешнего файла.',
+    en: 'Tilt during measurement. NONE — measured in its normal position (the common case). Otherwise tilt data (TILT=INCLUDE) or an external file name would go here.',
+  },
+  {
+    code: '1 3560 1 5 4 1 2 0.2 0.2 0.1',
+    ru: 'Главная строка из 10 чисел. По порядку: 1 — число ламп; 3560 — световой поток лампы, лм (−1 означало бы абсолютную фотометрию); 1 — общий множитель силы света; 5 — число вертикальных углов γ; 4 — число горизонтальных углов C; 1 — тип фотометрии (1 = Type C); 2 — единицы габаритов (2 = метры, 1 = футы); 0.2 · 0.2 · 0.1 — ширина, длина, высота светового отверстия, м.',
+    en: 'The main line of 10 numbers. In order: 1 — number of lamps; 3560 — lamp luminous flux, lm (−1 would mean absolute photometry); 1 — overall intensity multiplier; 5 — number of vertical angles γ; 4 — number of horizontal angles C; 1 — photometric type (1 = Type C); 2 — dimension units (2 = meters, 1 = feet); 0.2 · 0.2 · 0.1 — width, length, height of the luminous opening, m.',
+  },
+  {
+    code: '1.0 1.0 25',
+    ru: 'Ещё три числа: балластный коэффициент, служебное поле (future use) и потребляемая мощность — 25 Вт.',
+    en: 'Three more numbers: ballast factor, a future-use field, and input power — 25 W.',
+  },
+  {
+    code: '0 30 60 75 90',
+    ru: 'Вертикальные углы γ (5 штук): от надира 0° (строго вниз) до горизонта 90°. Именно в этих направлениях измерена сила света.',
+    en: 'Vertical angles γ (5 of them): from nadir 0° (straight down) to the horizon 90°. Intensity is measured in exactly these directions.',
+  },
+  {
+    code: '0 45 90 135',
+    ru: 'Горизонтальные углы C — азимут (4 штуки). У симметричных светильников хватает части круга; полный круг — 0…360°.',
+    en: 'Horizontal angles C — azimuth (4 of them). Symmetric luminaires need only part of the circle; a full circle is 0…360°.',
+  },
+  {
+    code: '1200 1050 620 210 0\n1200 1050 620 210 0\n1200 1050 620 210 0\n1200 1050 620 210 0',
+    ru: 'Таблица силы света в канделах: одна строка на каждый угол C, а в строке — значения для всех углов γ по порядку. Здесь 4 × 5 = 20 чисел. Пик 1200 кд в надире, к горизонту спадает до нуля.',
+    en: 'The luminous intensity table in candelas: one row per C angle, each row holding the values for all γ angles in order. Here 4 × 5 = 20 numbers. The peak is 1200 cd at nadir, falling to zero toward the horizon.',
+  },
+];
+
+const LDT_BLOCKS: Block[] = [
+  {
+    code: 'ООО "Свет"',
+    ru: 'Строка 1 — компания или автор файла.',
+    en: 'Line 1 — the company or file author.',
+  },
+  {
+    code: '1',
+    ru: 'Ityp — тип по геометрии источника: 1 — точечный, симметричный относительно вертикальной оси; 2 — линейный; 3 — точечный с иной симметрией.',
+    en: 'Ityp — source geometry type: 1 — point, symmetric about the vertical axis; 2 — linear; 3 — point with other symmetry.',
+  },
+  {
+    code: '0',
+    ru: 'Isym — вид симметрии: 0 — нет, 1 — полная вращательная, 2 — относительно C0–C180, 3 — относительно C90–C270, 4 — четверть. От этого зависит, сколько плоскостей C реально записано в файле.',
+    en: 'Isym — symmetry type: 0 — none, 1 — full rotational, 2 — about C0–C180, 3 — about C90–C270, 4 — quadrant. It sets how many C planes are actually stored in the file.',
+  },
+  {
+    code: '4\n90\n5\n22.5',
+    ru: 'Четыре числа подряд: Mc — число плоскостей C (4); Dc — шаг по C (90°); Ng — число углов γ на плоскость (5); Dg — шаг по γ (22.5°).',
+    en: 'Four numbers in a row: Mc — number of C planes (4); Dc — C step (90°); Ng — number of γ angles per plane (5); Dg — γ step (22.5°).',
+  },
+  {
+    code: 'SVET-2026-014\nЛинейный светильник 25 Вт\nSVET-LN-25\nsvet-ln-25.ldt\n2026-02-10',
+    ru: 'Строки 8–12: номер протокола, название светильника, его артикул, имя файла и дата измерения.',
+    en: 'Lines 8–12: report number, luminaire name, its catalog number, file name and measurement date.',
+  },
+  {
+    code: '1200\n40\n80',
+    ru: 'Габариты корпуса, мм: длина 1200, ширина 40, высота 80.',
+    en: 'Housing dimensions, mm: length 1200, width 40, height 80.',
+  },
+  {
+    code: '1180\n35\n0\n0\n0\n0',
+    ru: 'Размеры светящей поверхности, мм: длина 1180, ширина 35; далее высоты по плоскостям C0/C90/C180/C270 (здесь нули — плоская поверхность). Ширина 0 означала бы круглую поверхность.',
+    en: 'Luminous-area sizes, mm: length 1180, width 35; then heights per the C0/C90/C180/C270 planes (zeros here — a flat surface). A width of 0 would mean a round surface.',
+  },
+  {
+    code: '60\n85\n1\n0',
+    ru: 'DFF — доля потока вниз (60%); КПД светильника LORL (85%); коэффициент пересчёта силы света в кд/1000 лм (1); угол наклона при измерении (0°).',
+    en: 'DFF — downward flux fraction (60%); luminaire efficiency LORL (85%); the conversion factor to cd/1000 lm (1); measurement tilt angle (0°).',
+  },
+  {
+    code: '1\n1\nLED\n2500\n4000\n80\n25',
+    ru: 'Число наборов ламп (1) и сам набор из 6 полей: число ламп (1), тип (LED), суммарный поток (2500 лм), цветовая температура (4000 K), индекс цветопередачи (80), мощность (25 Вт).',
+    en: 'Number of lamp sets (1) and the set itself, 6 fields: lamp count (1), type (LED), total flux (2500 lm), color temperature (4000 K), CRI (80), wattage (25 W).',
+  },
+  {
+    code: '0\n0\n0\n0\n0\n0\n0\n0\n0\n0',
+    ru: 'Десять коэффициентов Direct Ratios — для расчётов по индексам помещения; в модель LM-63 не переносятся.',
+    en: 'Ten Direct Ratios — used for room-index calculations; not carried into the LM-63 model.',
+  },
+  {
+    code: '0\n90\n180\n270',
+    ru: 'Углы C (4 штуки) — азимутальные плоскости 0°, 90°, 180°, 270°.',
+    en: 'C angles (4) — the azimuthal planes 0°, 90°, 180°, 270°.',
+  },
+  {
+    code: '0\n22.5\n45\n67.5\n90',
+    ru: 'Углы γ (5 штук) — от надира 0° до горизонта 90°.',
+    en: 'γ angles (5) — from nadir 0° to the horizon 90°.',
+  },
+  {
+    code: '445\n380\n232\n83\n0\n445\n380\n232\n83\n0\n445\n380\n232\n83\n0\n445\n380\n232\n83\n0',
+    ru: 'Сила света в кд/1000 лм: по одному значению в строке, блоками по числу углов γ, для каждой плоскости C (здесь 4 × 5 = 20 значений). Нормирована на поток — при чтении умножается на заявленные лм/1000. Это главное отличие от IES, где сила света в абсолютных канделах.',
+    en: 'Intensity in cd/1000 lm: one value per line, in blocks of Ng, for each C plane (here 4 × 5 = 20 values). Normalized to flux — multiplied by the declared lm/1000 on reading. This is the key difference from IES, where intensity is in absolute candelas.',
+  },
+];
+
+function downloadText(fileName: string, text: string): void {
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function AnnotatedFile({ title, fileName, blocks, lang }: { title: string; fileName: string; blocks: Block[]; lang: Lang }) {
+  const text = blocks.map((b) => b.code).join('\n') + '\n';
+  return (
+    <section className="ann-file">
+      <div className="ann-file-head">
+        <h3>{title}</h3>
+        <button className="btn ann-dl" onClick={() => downloadText(fileName, text)}>
+          {lang === 'en' ? 'Download example' : 'Скачать пример'}
+        </button>
+      </div>
+      <div className="ann-list">
+        {blocks.map((b, i) => (
+          <div className="ann" key={i}>
+            <pre className="ann-code">{b.code}</pre>
+            <p className="ann-note">{lang === 'en' ? b.en : b.ru}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
 
 export function ReferenceView() {
   const lang = useLang();
+  const en = lang === 'en';
   return (
     <div className="about-view">
-      <div className="about-card reference-card">{lang === 'en' ? <ReferenceEn /> : <ReferenceRu />}</div>
+      <div className="about-card reference-card">
+        <h2>{en ? 'Format reference' : 'Справочник по форматам'}</h2>
+        <p className="about-lead">
+          {en
+            ? 'Photometric files describe how a luminaire distributes light in space. There are two main formats:'
+            : 'Фотометрические файлы описывают, как светильник распределяет свет в пространстве. Существуют два основных формата:'}
+        </p>
+        <ul className="ref-formats">
+          <li>
+            {en ? (
+              <>
+                <b>IES</b> — .ies files (the IESNA LM-63 standard, used worldwide)
+              </>
+            ) : (
+              <>
+                <b>IES</b> — файлы .ies (стандарт IESNA LM-63, распространён во всём мире)
+              </>
+            )}
+          </li>
+          <li>
+            {en ? (
+              <>
+                <b>LDT</b> — .ldt files (EULUMDAT — a European format created in 1990 at TU Berlin)
+              </>
+            ) : (
+              <>
+                <b>LDT</b> — файлы .ldt (EULUMDAT — европейский формат, создан в 1990 г. в TU Berlin)
+              </>
+            )}
+          </li>
+        </ul>
+        <p className="about-lead">
+          {en
+            ? 'Below is how they are built, in enough detail to read and edit files by hand. On the left is a line from a real (small) file, on the right — what it is. You can download either example and open it in the editor.'
+            : 'Ниже — их устройство на уровне, достаточном, чтобы читать и править файлы вручную. Слева — строка настоящего (небольшого) файла, справа — что это. Любой пример можно скачать и открыть в редакторе.'}
+        </p>
+
+        <AnnotatedFile title="IES (IESNA LM-63)" fileName="example-svet.ies" blocks={IES_BLOCKS} lang={lang} />
+        <AnnotatedFile title="EULUMDAT (.ldt)" fileName="example-svet.ldt" blocks={LDT_BLOCKS} lang={lang} />
+
+        <p className="about-note">
+          {en
+            ? 'This describes the structure of the formats — a public technical fact needed for software interoperability. The texts of the standards themselves (IESNA LM-63, published by the IES; the EULUMDAT specification) are copyrighted by their rights holders and are neither included nor reproduced here. The companies in the examples are fictitious.'
+            : 'Здесь описана структура форматов — общедоступный технический факт, необходимый для совместимости программ. Тексты самих стандартов (IESNA LM-63, издаваемый IES; описание EULUMDAT) охраняются авторским правом их правообладателей и в справочник не входят и не воспроизводятся. Компании в примерах вымышленные.'}
+        </p>
+      </div>
     </div>
-  );
-}
-
-function ReferenceRu() {
-  return (
-    <>
-      <h2>Справочник по форматам</h2>
-      <p className="about-lead">
-        Фотометрические файлы описывают, как светильник распределяет свет в пространстве — кривую силы света (КСС).
-        Два основных формата: <b>IES</b> (стандарт IESNA LM-63, распространён в США и мире) и <b>EULUMDAT</b> —
-        файлы <code>.ldt</code> (европейский формат, создан в 1990 г. в TU Berlin). Ниже — их устройство на уровне,
-        достаточном, чтобы читать и править файлы вручную.
-      </p>
-
-      <h3>IES (IESNA LM-63)</h3>
-      <p>
-        Текстовый файл. Числа идут свободным потоком: разбиты по строкам произвольно, разделители — пробелы, табуляции
-        или переводы строк (иногда запятые). Порядок значений строго фиксирован.
-      </p>
-      <ol className="ref-struct">
-        <li>
-          <b>Строка формата</b> (с 1991 г.): <code>IESNA:LM-63-2002</code>, <code>IESNA:LM-63-1995</code>,{' '}
-          <code>IESNA91</code>. В редакции 1986 г. её нет — файл начинается сразу с ключевых слов или с TILT.
-        </li>
-        <li>
-          <b>Ключевые слова</b> в квадратных скобках (с 1995 г.): <code>[TEST]</code>, <code>[TESTLAB]</code>,{' '}
-          <code>[MANUFAC]</code>, <code>[LUMCAT]</code> (артикул), <code>[LUMINAIRE]</code>, <code>[ISSUEDATE]</code>.
-          Строка <code>[MORE]</code> продолжает предыдущее значение, если оно длинное. Порядок и состав ключей —
-          на усмотрение автора файла.
-        </li>
-        <li>
-          <b>TILT</b> — наклон при измерении: <code>TILT=NONE</code> (обычный случай), <code>TILT=INCLUDE</code>{' '}
-          (данные наклона встроены ниже: геометрия лампы 1/2/3, число пар, углы, множители) или{' '}
-          <code>TILT=&lt;имя_файла&gt;</code> (данные в отдельном файле).
-        </li>
-        <li>
-          <b>Строка из 10 чисел</b> — сердце заголовка:
-          <div className="ref-code">
-            число_ламп · поток_лампы · множитель · N_верт · N_гор · тип_фотометрии · единицы · ширина · длина · высота
-          </div>
-          <ul>
-            <li>
-              <b>поток лампы, лм</b> — заявленный световой поток. Значение <b>−1</b> означает абсолютную фотометрию:
-              таблица силы света задана в реальных канделах, а не на условную 1000 лм.
-            </li>
-            <li>
-              <b>множитель</b> — все значения силы света умножаются на него при чтении.
-            </li>
-            <li>
-              <b>тип фотометрии</b>: <b>1 = Type C</b> (почти все архитектурные и уличные светильники),{' '}
-              <b>2 = Type B</b> (прожекторы), <b>3 = Type A</b> (автомобильная светотехника).
-            </li>
-            <li>
-              <b>единицы</b>: <b>1 = футы</b>, <b>2 = метры</b> (относятся только к габаритам светового отверстия).
-            </li>
-            <li>
-              <b>ширина / длина / высота</b> светового отверстия. Знак кодирует форму: <b>0</b> — точечный источник,
-              положительные — прямоугольник, <b>отрицательное</b> значение по оси — круглое/эллиптическое сечение,
-              а модуль — диаметр. На саму КСС не влияет; используется расчётными пакетами для учёта самозатенения.
-            </li>
-          </ul>
-        </li>
-        <li>
-          <b>Строка из 3 чисел</b>: балластный коэффициент · служебное поле (future use) · потребляемая мощность, Вт.
-        </li>
-        <li>
-          <b>Вертикальные углы γ</b> — N_верт значений. Для Type C: 0° — надир (строго вниз), 90° — горизонт, 180° —
-          зенит. Диапазон 0…90 (светит только вниз) или 0…180.
-        </li>
-        <li>
-          <b>Горизонтальные углы C</b> (азимут) — N_гор значений, 0…360°. Для симметричных КСС хватает части круга:
-          один угол (осевая), 0…90 (квадрант), 0…180 (двусторонняя).
-        </li>
-        <li>
-          <b>Таблица силы света</b>, кд: для каждого угла C по порядку — все значения по γ. Итого N_гор × N_верт чисел.
-        </li>
-      </ol>
-      <p className="ref-note">
-        Система координат Type C: единичный вектор направления{' '}
-        <code>n(γ, C) = (sin γ·cos C, sin γ·sin C, cos γ)</code>, ось Z — вниз. Плоскость C0–C180 — продольная,
-        C90–C270 — поперечная.
-      </p>
-
-      <h3>EULUMDAT (.ldt)</h3>
-      <p>
-        Строго построчный формат: <b>одна строка — одно поле</b>, порядок жёсткий, всего около 40 полей заголовка плюс
-        блоки данных. В отличие от IES «свободного потока чисел» здесь нельзя переносить значения между строками.
-        Всегда описывает распределение типа C.
-      </p>
-      <table className="ref-table">
-        <thead>
-          <tr>
-            <th>Строки</th>
-            <th>Содержание</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>1</td>
-            <td>Компания / автор файла</td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>Ityp — тип по геометрии (1 точечный симметричный, 2 линейный, 3 точечный с иной симметрией)</td>
-          </tr>
-          <tr>
-            <td>3</td>
-            <td>
-              <b>Isym</b> — симметрия: 0 нет, 1 полная вращательная, 2 относительно C0–C180, 3 относительно C90–C270,
-              4 четверть
-            </td>
-          </tr>
-          <tr>
-            <td>4–7</td>
-            <td>Mc — число плоскостей C; Dc — шаг по C; Ng — число углов γ на плоскость; Dg — шаг по γ</td>
-          </tr>
-          <tr>
-            <td>8–12</td>
-            <td>Номер протокола, название и номер светильника, имя файла, дата/автор</td>
-          </tr>
-          <tr>
-            <td>13–15</td>
-            <td>Габариты корпуса: длина, ширина, высота, мм</td>
-          </tr>
-          <tr>
-            <td>16–21</td>
-            <td>Размеры светящей поверхности (мм); ширина 0 — круглая; высоты по плоскостям C0/C90/C180/C270</td>
-          </tr>
-          <tr>
-            <td>22–24</td>
-            <td>DFF (доля потока вниз, %), КПД светильника (LORL, %), коэффициент пересчёта в кд/клм</td>
-          </tr>
-          <tr>
-            <td>25</td>
-            <td>Угол наклона при измерении (для дорожной оптики)</td>
-          </tr>
-          <tr>
-            <td>26</td>
-            <td>Число наборов ламп; далее по 6 строк на набор: число ламп, тип, поток, цветность, CRI, мощность</td>
-          </tr>
-          <tr>
-            <td>далее</td>
-            <td>10 строк Direct Ratios (коэффициенты для индексов помещения)</td>
-          </tr>
-          <tr>
-            <td>затем</td>
-            <td>Mc значений углов C, затем Ng значений углов γ</td>
-          </tr>
-          <tr>
-            <td>в конце</td>
-            <td>
-              Сила света в <b>кд/1000 лм</b> — по плоскостям C, для каждой все значения по γ. Число реально записанных
-              плоскостей зависит от Isym (при полной симметрии — одна)
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <p className="ref-note">
-        Ключевое отличие в данных: EULUMDAT хранит силу света в <b>кд на 1000 лм</b> (нормировано на поток), а IES — в
-        абсолютных канделах (или на условную 1000 лм при абсолютной фотометрии). LDT также несёт габариты, цветовую
-        температуру и индекс цветопередачи, которых в IES нет.
-      </p>
-
-      <h3>Что делает этот редактор</h3>
-      <p>
-        Читает и <code>.ies</code> (все редакции LM-63), и <code>.ldt</code>, приводя оба к единой внутренней модели
-        Type C. Файлы в футах пересчитываются в метры при загрузке. Сохранение — всегда в <code>.ies</code>. Type A/B
-        конвертируются в Type C для расчётов; геометрические инструменты работают только с Type C.
-      </p>
-
-      <h3>О стандартах и правах</h3>
-      <p className="about-note">
-        Здесь описана <b>структура форматов</b> — общедоступный технический факт, необходимый для совместимости
-        программ. Тексты самих стандартов (IESNA LM-63, издаваемый IES; описание EULUMDAT) охраняются авторским правом
-        их правообладателей и в этот справочник не входят и не воспроизводятся. Значения полей, границы и допуски здесь
-        справочные; для сертификации сверяйтесь с первоисточником.
-      </p>
-    </>
-  );
-}
-
-function ReferenceEn() {
-  return (
-    <>
-      <h2>Format reference</h2>
-      <p className="about-lead">
-        Photometric files describe how a luminaire distributes light in space — its luminous intensity distribution.
-        Two main formats: <b>IES</b> (the IESNA LM-63 standard, common in the US and worldwide) and <b>EULUMDAT</b> —{' '}
-        <code>.ldt</code> files (a European format created in 1990 at TU Berlin). Below is how they are built, in
-        enough detail to read and edit files by hand.
-      </p>
-
-      <h3>IES (IESNA LM-63)</h3>
-      <p>
-        A text file. Numbers form a free stream: split across lines arbitrarily, separated by spaces, tabs or line
-        breaks (sometimes commas). The order of values is strictly fixed.
-      </p>
-      <ol className="ref-struct">
-        <li>
-          <b>Format line</b> (since 1991): <code>IESNA:LM-63-2002</code>, <code>IESNA:LM-63-1995</code>,{' '}
-          <code>IESNA91</code>. The 1986 revision has none — the file starts directly with keywords or TILT.
-        </li>
-        <li>
-          <b>Keywords</b> in square brackets (since 1995): <code>[TEST]</code>, <code>[TESTLAB]</code>,{' '}
-          <code>[MANUFAC]</code>, <code>[LUMCAT]</code> (catalog number), <code>[LUMINAIRE]</code>,{' '}
-          <code>[ISSUEDATE]</code>. A <code>[MORE]</code> line continues the previous value when it is long. Which
-          keys appear, and their order, is up to the file's author.
-        </li>
-        <li>
-          <b>TILT</b> — tilt during measurement: <code>TILT=NONE</code> (the usual case), <code>TILT=INCLUDE</code>{' '}
-          (tilt data embedded below: lamp geometry 1/2/3, number of pairs, angles, multipliers) or{' '}
-          <code>TILT=&lt;filename&gt;</code> (data in a separate file).
-        </li>
-        <li>
-          <b>A line of 10 numbers</b> — the heart of the header:
-          <div className="ref-code">
-            #lamps · lumens/lamp · multiplier · N_vert · N_horiz · photometric_type · units · width · length · height
-          </div>
-          <ul>
-            <li>
-              <b>lumens per lamp</b> — the declared luminous flux. A value of <b>−1</b> means absolute photometry: the
-              intensity table is in real candelas, not per a nominal 1000 lm.
-            </li>
-            <li>
-              <b>multiplier</b> — every intensity value is multiplied by it on reading.
-            </li>
-            <li>
-              <b>photometric type</b>: <b>1 = Type C</b> (almost all architectural and street luminaires),{' '}
-              <b>2 = Type B</b> (floodlights), <b>3 = Type A</b> (automotive lighting).
-            </li>
-            <li>
-              <b>units</b>: <b>1 = feet</b>, <b>2 = meters</b> (apply only to the luminous-opening size).
-            </li>
-            <li>
-              <b>width / length / height</b> of the luminous opening. The sign encodes the shape: <b>0</b> — a point
-              source, positive — a rectangle, a <b>negative</b> value on an axis — a round/elliptical section, with the
-              absolute value being the diameter. It does not affect the distribution itself; calculation packages use
-              it for self-shadowing.
-            </li>
-          </ul>
-        </li>
-        <li>
-          <b>A line of 3 numbers</b>: ballast factor · future-use field · input power, W.
-        </li>
-        <li>
-          <b>Vertical angles γ</b> — N_vert values. For Type C: 0° is nadir (straight down), 90° the horizon, 180° the
-          zenith. The range is 0…90 (light only downward) or 0…180.
-        </li>
-        <li>
-          <b>Horizontal angles C</b> (azimuth) — N_horiz values, 0…360°. Symmetric distributions need only part of the
-          circle: one angle (axial), 0…90 (quadrant), 0…180 (bilateral).
-        </li>
-        <li>
-          <b>Intensity table</b>, cd: for each C angle in order — all values over γ. In total N_horiz × N_vert numbers.
-        </li>
-      </ol>
-      <p className="ref-note">
-        Type C coordinate system: the unit direction vector{' '}
-        <code>n(γ, C) = (sin γ·cos C, sin γ·sin C, cos γ)</code>, Z axis pointing down. The C0–C180 plane is
-        longitudinal, C90–C270 transverse.
-      </p>
-
-      <h3>EULUMDAT (.ldt)</h3>
-      <p>
-        A strictly line-based format: <b>one line — one field</b>, a rigid order, about 40 header fields plus data
-        blocks. Unlike the IES "free stream of numbers", values cannot be wrapped across lines here. It always
-        describes a Type C distribution.
-      </p>
-      <table className="ref-table">
-        <thead>
-          <tr>
-            <th>Lines</th>
-            <th>Contents</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>1</td>
-            <td>Company / file author</td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>Ityp — type by geometry (1 point symmetric, 2 linear, 3 point with other symmetry)</td>
-          </tr>
-          <tr>
-            <td>3</td>
-            <td>
-              <b>Isym</b> — symmetry: 0 none, 1 full rotational, 2 about C0–C180, 3 about C90–C270, 4 quadrant
-            </td>
-          </tr>
-          <tr>
-            <td>4–7</td>
-            <td>Mc — number of C planes; Dc — C step; Ng — number of γ angles per plane; Dg — γ step</td>
-          </tr>
-          <tr>
-            <td>8–12</td>
-            <td>Report number, luminaire name and number, file name, date/author</td>
-          </tr>
-          <tr>
-            <td>13–15</td>
-            <td>Housing dimensions: length, width, height, mm</td>
-          </tr>
-          <tr>
-            <td>16–21</td>
-            <td>Luminous-area sizes (mm); width 0 means round; heights per the C0/C90/C180/C270 planes</td>
-          </tr>
-          <tr>
-            <td>22–24</td>
-            <td>DFF (downward flux fraction, %), luminaire efficiency (LORL, %), conversion factor to cd/klm</td>
-          </tr>
-          <tr>
-            <td>25</td>
-            <td>Measurement tilt angle (for road optics)</td>
-          </tr>
-          <tr>
-            <td>26</td>
-            <td>Number of lamp sets; then 6 lines per set: lamp count, type, flux, color, CRI, wattage</td>
-          </tr>
-          <tr>
-            <td>then</td>
-            <td>10 Direct Ratios lines (coefficients for room indices)</td>
-          </tr>
-          <tr>
-            <td>then</td>
-            <td>Mc values of C angles, then Ng values of γ angles</td>
-          </tr>
-          <tr>
-            <td>finally</td>
-            <td>
-              Intensity in <b>cd/1000 lm</b> — per C plane, all γ values for each. The number of planes actually stored
-              depends on Isym (one, under full symmetry)
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <p className="ref-note">
-        The key data difference: EULUMDAT stores intensity in <b>cd per 1000 lm</b> (normalized to flux), while IES
-        uses absolute candelas (or per nominal 1000 lm under absolute photometry). LDT also carries dimensions, color
-        temperature and color rendering index, which IES lacks.
-      </p>
-
-      <h3>What this editor does</h3>
-      <p>
-        It reads both <code>.ies</code> (all LM-63 revisions) and <code>.ldt</code>, bringing both to a single internal
-        Type C model. Files in feet are converted to meters on load. Output is always <code>.ies</code>. Type A/B are
-        converted to Type C for calculations; the geometric tools work only with Type C.
-      </p>
-
-      <h3>On standards and rights</h3>
-      <p className="about-note">
-        This describes the <b>structure of the formats</b> — a public technical fact needed for software
-        interoperability. The texts of the standards themselves (IESNA LM-63, published by the IES; the EULUMDAT
-        specification) are copyrighted by their rights holders and are neither included nor reproduced here. Field
-        meanings, boundaries and tolerances here are for reference; for certification, consult the primary source.
-      </p>
-    </>
   );
 }

@@ -1004,54 +1004,69 @@
   margin-left: 4px;
 }
 
-/* Справочник по форматам — та же карточка, что «О программе», плюс структура и таблицы */
-.reference-card ol.ref-struct {
+
+
+/* Справочник — аннотированный пример: реальная строка + объяснение */
+.ref-formats {
+  margin: 6px 0 16px;
   padding-left: 22px;
 }
-.reference-card ol.ref-struct > li {
-  margin-bottom: 12px;
+.ref-formats li {
+  margin-bottom: 5px;
 }
-.reference-card code {
-  font-family: var(--font-mono);
-  font-size: 0.9em;
-  background: var(--surface);
-  padding: 1px 5px;
+.ann-file {
+  margin-top: 30px;
 }
-.ref-code {
+.ann-file-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 2px solid var(--accent);
+  padding-bottom: 8px;
+  margin-bottom: 4px;
+}
+.ann-file-head h3 {
+  margin: 0;
+}
+.ann-dl {
+  flex: 0 0 auto;
+  font-size: 12px;
+  padding: 6px 12px;
+}
+.ann-list {
+  display: flex;
+  flex-direction: column;
+}
+.ann {
+  display: grid;
+  grid-template-columns: minmax(190px, 38%) 1fr;
+  gap: 18px;
+  align-items: start;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--surface);
+}
+.ann-code {
+  margin: 0;
   font-family: var(--font-mono);
   font-size: 12.5px;
+  line-height: 1.5;
   background: var(--surface);
   border: 1px solid var(--border);
   padding: 8px 10px;
-  margin: 6px 0;
+  white-space: pre;
   overflow-x: auto;
-  white-space: nowrap;
+  color: var(--text);
 }
-.ref-note {
-  color: var(--muted);
-  font-size: 13px;
-}
-.ref-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 8px 0 14px;
+.ann-note {
+  margin: 0;
   font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--text);
 }
-.ref-table th,
-.ref-table td {
-  border: 1px solid var(--border);
-  padding: 7px 10px;
-  text-align: left;
-  vertical-align: top;
-}
-.ref-table th {
-  background: var(--surface);
-  font-weight: 700;
-}
-.ref-table td:first-child {
-  white-space: nowrap;
-  font-family: var(--font-mono);
-  font-size: 12.5px;
-  color: var(--muted);
-  width: 1%;
+@media (max-width: 760px) {
+  .ann {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
 }
