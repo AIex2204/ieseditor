@@ -4,6 +4,7 @@ import { Sidebar } from './components/layout/Sidebar';
 import { Workspace } from './components/layout/Workspace';
 import { CompareView } from './components/compare/CompareView';
 import { AboutView } from './components/about/AboutView';
+import { CookieNotice } from './components/common/CookieNotice';
 import { useActiveDocEntry, useAppStore } from './state/store';
 
 export function App() {
@@ -34,6 +35,7 @@ export function App() {
         {viewMode === 'compare' && <CompareView />}
         {viewMode === 'about' && <AboutView />}
       </div>
+      <CookieNotice />
     </div>
   );
 }

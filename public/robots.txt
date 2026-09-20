@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /fonts/
 
-Sitemap: https://www.ieseditor.ru/sitemap.xml
+Sitemap: https://ieseditor.ru/sitemap.xml

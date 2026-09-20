@@ -87,6 +87,17 @@ export function AboutView() {
           программу не входят.
         </p>
 
+        <p className="about-docs">
+          Документы:{' '}
+          <a href="/polzovatelskoe-soglashenie.html" target="_blank" rel="noopener noreferrer">
+            Пользовательское соглашение
+          </a>{' '}
+          ·{' '}
+          <a href="/politika-obrabotki-dannyh.html" target="_blank" rel="noopener noreferrer">
+            Политика обработки персональных данных
+          </a>
+        </p>
+
         <p className="about-note">
           Программа предоставляется «как есть», без гарантий. Результаты обработки — включая тип КСС, углы и
           расчётный поток — справочные: перед публикацией в каталоге и перед сертификацией проверяйте их по
