@@ -1,12 +1,13 @@
 {
   "name": "iesedit",
   "private": true,
-  "version": "1.1.0",
+  "version": "1.1.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "gen:legal": "node scripts/gen-legal.mjs",
+    "gen:demo": "node scripts/gen-demo.mjs",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest"

@@ -173,3 +173,14 @@
 .m-footer a {
   color: var(--muted);
 }
+
+.m-demo-link {
+  display: inline-block;
+  margin-top: 14px;
+  border: none;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+}

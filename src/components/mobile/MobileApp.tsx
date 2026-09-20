@@ -10,6 +10,7 @@ import { cleanDoc, detectCutoff } from '../../core/photometry/clean';
 import { rotateDoc } from '../../core/photometry/rotate';
 import { currentFlux, scaleFluxTo } from '../../core/photometry/scaleFlux';
 import { MobilePolarChart } from './MobilePolarChart';
+import { useLoadDemo } from '../../hooks/useLoadDemo';
 
 const MAX_FILE_SIZE = 30 * 1024 * 1024;
 
@@ -54,6 +55,7 @@ export function MobileApp() {
   const removeDocument = useAppStore((s) => s.removeDocument);
   const updateWorking = useAppStore((s) => s.updateWorking);
   const discardChanges = useAppStore((s) => s.discardChanges);
+  const loadDemo = useLoadDemo();
 
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -120,6 +122,9 @@ export function MobileApp() {
             Загрузить .ies / .ldt
           </button>
           <p className="m-empty-note">Файл обрабатывается прямо на телефоне и никуда не отправляется.</p>
+          <button className="m-demo-link" onClick={() => void loadDemo()}>
+            Открыть демо-файл
+          </button>
           {error && <p className="m-error">{error}</p>}
         </div>
       ) : (
