@@ -44,11 +44,6 @@ const MIN_POINTS_IN_BEAM = 4;
 /** Длина серии одинаковых значений подряд, считающаяся следом ручной правки. */
 const PLATEAU_RUN = 4;
 
-// Артикул [LUMCAT] сознательно не требуем: у файлов от лаборатории и от
-// сторонних производителей его обычно нет, а присваивается он уже своим
-// каталогом — ругаться на каждый входящий файл смысла нет.
-const REQUIRED_KEYWORDS = ['TEST', 'MANUFAC'];
-
 function fmt(n: number, digits = 1): string {
   return n.toLocaleString('ru-RU', { minimumFractionDigits: digits, maximumFractionDigits: digits });
 }
@@ -295,21 +290,35 @@ function checkDimensions(doc: PhotometryDoc, L: LFn): AuditCheck {
   };
 }
 
+// Из ключевых слов требуем только то, что заполняет и должен знать сам
+// пользователь: производителя и название светильника. Номер протокола [TEST],
+// артикул [LUMCAT] и прочую метадату лаборатории не требуем — их часто нет во
+// входящем файле, а пользователю на это повлиять нечем.
+const REQUIRED_KEYWORDS: { key: string; ru: string; en: string }[] = [
+  { key: 'MANUFAC', ru: 'производитель [MANUFAC]', en: 'manufacturer [MANUFAC]' },
+  { key: 'LUMINAIRE', ru: 'название светильника [LUMINAIRE]', en: 'luminaire name [LUMINAIRE]' },
+];
+
 function checkKeywords(doc: PhotometryDoc, L: LFn): AuditCheck {
-  const present = new Set(doc.keywords.map((k) => k.key.toUpperCase()));
-  const missing = REQUIRED_KEYWORDS.filter((k) => !present.has(k) || !doc.keywords.find((kw) => kw.key.toUpperCase() === k)?.value.trim());
+  const value = (key: string) => doc.keywords.find((kw) => kw.key.toUpperCase() === key)?.value.trim();
+  const missing = REQUIRED_KEYWORDS.filter((k) => !value(k.key));
   if (missing.length > 0) {
     return {
       id: 'keywords',
       title: L('Ключевые слова шапки', 'Header keywords'),
       severity: 'warning',
       detail: L(
-        `Не заполнены: ${missing.map((k) => `[${k}]`).join(', ')}. Для каталога и выгрузки в базы их обычно требуют.`,
-        `Missing: ${missing.map((k) => `[${k}]`).join(', ')}. Catalogs and database uploads usually require them.`
+        `Не заполнено: ${missing.map((k) => k.ru).join(', ')}. Стоит указать перед публикацией в каталоге.`,
+        `Missing: ${missing.map((k) => k.en).join(', ')}. Worth filling in before publishing to a catalog.`
       ),
     };
   }
-  return { id: 'keywords', title: L('Ключевые слова шапки', 'Header keywords'), severity: 'ok', detail: L('Обязательные ключевые слова заполнены.', 'Required keywords are present.') };
+  return {
+    id: 'keywords',
+    title: L('Ключевые слова шапки', 'Header keywords'),
+    severity: 'ok',
+    detail: L('Производитель и название светильника заполнены.', 'Manufacturer and luminaire name are present.'),
+  };
 }
 
 function checkAngleGrid(doc: PhotometryDoc, L: LFn): AuditCheck {
