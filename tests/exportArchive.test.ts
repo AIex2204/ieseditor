@@ -46,9 +46,9 @@ describe('buildArchive — выгрузка одним архивом', () => {
     expect(report).toContain('Расчётный поток, лм');
     expect(report).toContain('www.ieseditor.ru');
 
-    // .ies внутри архива — валидный файл с метрой редактора и новым потоком
+    // .ies внутри архива — валидный файл БЕЗ упоминания нашего сайта внутри
     const iesText = strFromU8(zip['V1-S1 (edited v1).ies']);
-    expect(iesText).toContain('[_EDITOR] www.ieseditor.ru');
+    expect(iesText.toLowerCase()).not.toContain('ieseditor.ru');
     const reparsed = parseIesText(iesText, edited.sourceEncoding).doc;
     expect(reparsed.warnings.filter((w) => w.severity === 'error')).toHaveLength(0);
     expect(reparsed.numVertAngles).toBe(edited.numVertAngles);

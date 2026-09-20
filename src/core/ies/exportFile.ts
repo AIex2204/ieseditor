@@ -20,26 +20,26 @@ function ensureIesExtension(name: string): string {
   return /\.ies$/i.test(name) ? name : `${name}.ies`;
 }
 
-export const EDITOR_STAMP_KEY = '_EDITOR';
-export const EDITOR_STAMP_VALUE = 'www.ieseditor.ru';
+const EDITOR_STAMP_KEY = '_EDITOR';
 
 /**
- * Ставит в шапку файла метку редактора. Ключ с подчёркиванием — ровно то,
- * что LM-63-2002 отводит под пользовательские ключевые слова: расчётные
- * пакеты (DIALux, Relux, AGi32) такие строки игнорируют, так что метка
- * ничему не мешает. Повторное сохранение не копит дубли — старая метка
- * заменяется. Метка живёт только в выгружаемом файле и не подмешивается
- * в документ, открытый в приложении.
+ * Убирает из шапки метку нашего редактора, если она там оказалась (файлы,
+ * сохранённые прежними версиями, добавляли `[_EDITOR] www.ieseditor.ru`).
+ * Сознательно НИЧЕГО не добавляем: адрес нашего сайта внутри чужого
+ * фотометрического файла мог бы поставить человека в неловкое положение при
+ * передаче файла заказчику. Другие пользовательские ключи `_EDITOR` не
+ * трогаем — вычищаем только своё упоминание.
  */
-export function withEditorStamp(doc: PhotometryDoc): PhotometryDoc {
-  const keywords = doc.keywords.filter((k) => k.key.toUpperCase() !== EDITOR_STAMP_KEY);
-  keywords.push({ key: EDITOR_STAMP_KEY, value: EDITOR_STAMP_VALUE });
-  return { ...doc, keywords };
+export function stripEditorStamp(doc: PhotometryDoc): PhotometryDoc {
+  const keywords = doc.keywords.filter(
+    (k) => !(k.key.toUpperCase() === EDITOR_STAMP_KEY && /ieseditor\.ru/i.test(k.value))
+  );
+  return keywords.length === doc.keywords.length ? doc : { ...doc, keywords };
 }
 
 /** Сохраняет текущую версию документа как .ies-файл (сохраняя исходную кодировку). */
 export function saveIesFile(doc: PhotometryDoc, fileName: string): void {
-  const text = serializeIes(withEditorStamp(doc));
+  const text = serializeIes(stripEditorStamp(doc));
   const bytes = encodeString(text, doc.sourceEncoding);
   triggerDownload(bytes, ensureIesExtension(fileName), 'application/octet-stream');
 }

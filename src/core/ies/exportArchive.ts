@@ -5,7 +5,7 @@
 import { zipSync, strToU8 } from 'fflate';
 import { serializeIes } from './serialize';
 import { encodeString } from './encoding';
-import { triggerDownload, withEditorStamp } from './exportFile';
+import { triggerDownload, stripEditorStamp } from './exportFile';
 import type { PhotometryDoc } from './types';
 import { auditDoc, formatAuditReport } from '../audit/auditDoc';
 import { diffDocs, formatProcessingReport } from '../audit/docDiff';
@@ -40,7 +40,7 @@ function safeEntryName(name: string): string {
 }
 
 function iesBytes(doc: PhotometryDoc): Uint8Array {
-  return encodeString(serializeIes(withEditorStamp(doc)), doc.sourceEncoding);
+  return encodeString(serializeIes(stripEditorStamp(doc)), doc.sourceEncoding);
 }
 
 export function buildArchive(input: BuildArchiveInput): Uint8Array {
