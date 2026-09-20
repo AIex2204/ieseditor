@@ -5,16 +5,29 @@ import { Workspace } from './components/layout/Workspace';
 import { CompareView } from './components/compare/CompareView';
 import { AboutView } from './components/about/AboutView';
 import { CookieNotice } from './components/common/CookieNotice';
+import { MobileApp } from './components/mobile/MobileApp';
+import { useIsMobile } from './hooks/useIsMobile';
 import { useActiveDocEntry, useAppStore } from './state/store';
 
 export function App() {
-  const active = useActiveDocEntry();
   const hydrateFromStorage = useAppStore((s) => s.hydrateFromStorage);
-  const viewMode = useAppStore((s) => s.viewMode);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     void hydrateFromStorage();
   }, [hydrateFromStorage]);
+
+  return (
+    <>
+      {isMobile ? <MobileApp /> : <DesktopShell />}
+      <CookieNotice />
+    </>
+  );
+}
+
+function DesktopShell() {
+  const active = useActiveDocEntry();
+  const viewMode = useAppStore((s) => s.viewMode);
 
   return (
     <div className="app-shell">
@@ -35,7 +48,6 @@ export function App() {
         {viewMode === 'compare' && <CompareView />}
         {viewMode === 'about' && <AboutView />}
       </div>
-      <CookieNotice />
     </div>
   );
 }

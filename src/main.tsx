@@ -17,6 +17,7 @@ import { App } from './App';
 import { initMetrika, METRIKA_ID } from './analytics/metrika';
 import './styles/tokens.css';
 import './styles/layout.css';
+import './styles/mobile.css';
 
 const container = document.getElementById('root');
 if (!container) throw new Error('#root не найден');
