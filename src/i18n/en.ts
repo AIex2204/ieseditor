@@ -251,4 +251,5 @@ export const EN: Record<string, string> = {
   'Проблем не найдено': 'No problems found',
   'Есть замечания': 'Some remarks',
   'Найдены проблемы': 'Problems found',
+  'Справочник': 'Reference',
 };

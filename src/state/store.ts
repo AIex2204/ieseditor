@@ -18,7 +18,7 @@ export function activeDoc(entry: DocEntry): PhotometryDoc {
 
 export const MAX_DOCUMENTS = 20;
 
-export type ViewMode = 'files' | 'compare' | 'about';
+export type ViewMode = 'files' | 'compare' | 'reference' | 'about';
 
 /**
  * Правки летят в рабочий документ на каждое движение ползунка и на каждый

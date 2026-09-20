@@ -4,6 +4,7 @@ import { Sidebar } from './components/layout/Sidebar';
 import { Workspace } from './components/layout/Workspace';
 import { CompareView } from './components/compare/CompareView';
 import { AboutView } from './components/about/AboutView';
+import { ReferenceView } from './components/reference/ReferenceView';
 import { CookieNotice } from './components/common/CookieNotice';
 import { MobileApp } from './components/mobile/MobileApp';
 import { useIsMobile } from './hooks/useIsMobile';
@@ -67,6 +68,7 @@ function DesktopShell() {
           </>
         )}
         {viewMode === 'compare' && <CompareView />}
+        {viewMode === 'reference' && <ReferenceView />}
         {viewMode === 'about' && <AboutView />}
       </div>
     </div>

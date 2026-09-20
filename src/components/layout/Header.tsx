@@ -9,6 +9,7 @@ import { LangSwitch } from '../common/LangSwitch';
 const NAV: { id: ViewMode; label: string }[] = [
   { id: 'files', label: 'Файлы' },
   { id: 'compare', label: 'Сравнение' },
+  { id: 'reference', label: 'Справочник' },
   { id: 'about', label: 'О программе' },
 ];
 
